@@ -58,6 +58,9 @@ fsakel-com/
 ├── Containerfile
 ├── compose.yaml                # site (:3000) + edge (80/443)
 ├── DEPLOY.md                   # server setup
+├── .githooks/pre-commit        # rejects staged images carrying metadata
+├── scripts/
+│   └── check-image-metadata.mjs # used by the hook and the Containerfile
 ├── deploy/
 │   └── Caddyfile               # in-container static server config
 ├── edge/
@@ -219,14 +222,15 @@ The default (unguarded) CSS is always the finished static state.
 - **Accessibility**: semantic landmarks (`header`, `nav`, `main`, `footer`), one `h1` per page, visible `:focus-visible` styles, alt text on every image (decorative logos use `alt=""`), WCAG AA contrast against the cream background (check `--color-muted` and `--color-marker` especially), and a skip-to-content link. The timeline is an `<ol>` with `<time datetime>`.
 - **Responsive**: no horizontal scroll from 320px to 2560px wide. Use `svh`/`dvh` instead of `vh` for full-height sections, and size touch targets at ≥ 44px.
 - **Performance budget**: zero JS shipped; under 50 KB CSS + HTML for the home page (gzip), excluding images and fonts; LCP image (the portrait) preloaded with explicit dimensions; Lighthouse ≥ 95 in every category on mobile.
+- **Image metadata**: no image in the repository or in `dist/` carries metadata: EXIF (including GPS), XMP, IPTC, PNG text and timestamp chunks, or SVG comments, `<metadata>` and editor namespaces (Inkscape, Sketch, Figma). Strip it before adding an image (`exiftool -all=`, or `svgo` for SVGs). `scripts/check-image-metadata.mjs` enforces this from the pre-commit hook and the Containerfile. It also checks images inlined as `data:` URIs, and it rejects formats it can't parse (GIF, AVIF, ICO and others) until it is extended to handle them.
 - **SEO/meta**: per-page `<title>` and description, Open Graph tags, `sitemap.xml` (`@astrojs/sitemap`), canonical URL.
 - **Checks** (`pnpm check`): `astro check` (types and content schemas) plus `astro build`. Playwright smoke tests (JS disabled, mobile and desktop viewports, reduced motion) come in Phase 2.
 
 ## 9. Build and deployment
 
-- **Dev**: `pnpm dev`; **build**: `pnpm build`, producing `dist/`; **preview**: `pnpm preview`.
+- **Dev**: `pnpm dev`; **build**: `pnpm build`, producing `dist/`; **preview**: `pnpm preview`. Enable the pre-commit hook once per clone with `git config core.hooksPath .githooks`; it runs the image metadata check (§8) on staged images and needs `node`.
 - **Containerfile** (multi-stage):
-  1. `node:24-alpine`: enable corepack, run `pnpm install --frozen-lockfile`, then `pnpm build`.
+  1. `node:24-alpine`: enable corepack, run `pnpm install --frozen-lockfile`, then `pnpm build`, then the image metadata check (§8) on `dist/`, which fails the build if any image carries metadata.
   2. `caddy:2-alpine`: copy `dist/` to `/srv` and run `caddy file-server` on **port 3000** as a non-root user. It handles gzip/zstd, `Cache-Control: public, max-age=31536000, immutable` for `/_astro/*` (hashed assets), `no-cache` for HTML, security headers (strict CSP: `default-src 'self'`; no `'unsafe-inline'` for scripts), and the `404.html` fallback.
 - **Run**: `docker compose up -d --build` (or `podman compose`). `compose.yaml` runs two services:
   - `site`: the container above, published on `127.0.0.1:3000` only.

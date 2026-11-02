@@ -1,0 +1,21 @@
+#!/bin/sh
+# Rejects commits that add images carrying metadata (EXIF, XMP, text chunks,
+# editor data). Checks the staged contents, not the working tree.
+# Enable once per clone: git config core.hooksPath .githooks
+
+set -eu
+cd "$(git rev-parse --show-toplevel)"
+
+files=$(git diff --cached --name-only --diff-filter=ACMR -z \
+  | tr '\0' '\n' \
+  | grep -iE '\.(png|jpe?g|webp|svg|gif|avif|heic|tiff?|ico|bmp)$' || true)
+[ -n "$files" ] || exit 0
+
+tmp=$(mktemp -d)
+trap 'rm -rf "$tmp"' EXIT
+printf '%s\n' "$files" | git checkout-index --stdin --prefix="$tmp/"
+
+node scripts/check-image-metadata.mjs "$tmp" || {
+  echo "Strip the metadata (e.g. exiftool -all= FILE, or svgo for SVGs) and re-stage." >&2
+  exit 1
+}

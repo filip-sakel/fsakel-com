@@ -8,6 +8,8 @@ COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 COPY . .
 RUN pnpm build
+# Shipped images must carry no metadata (EXIF, XMP, text chunks, editor data).
+RUN node scripts/check-image-metadata.mjs dist
 
 # ---- serve ----
 FROM docker.io/library/caddy:2-alpine
