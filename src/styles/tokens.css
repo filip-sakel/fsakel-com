@@ -19,7 +19,7 @@
     --color-well-top: #e9dfc3;
     --color-well-bottom: #f4edda;
     --color-well-edge: #b8ad94;
-    /* Outline of raised controls and popovers (skills). */
+    /* Outline of popovers (and, in dark mode, raised controls). */
     --color-raised-edge: #b8ad94;
     /* Sunken well (selected nav item, pressed/open controls): flat fill
        inside a hairline that is shade on the top-left half and light on
@@ -60,7 +60,13 @@
        inside the bottom-right. */
     --shadow-well: inset 2px 2px 2.5px #cbc3b2, inset -2px -2px 2.5px #fffff0;
     --shadow-well-sm: var(--shadow-well);
-    --shadow-raised: 0 1px 0 rgb(255 255 255 / 0.8), 0 1px 2px rgb(70 50 20 / 0.12);
+    /* Raised (neumorphic) buttons: same fill as the page, lifted by a
+       shade to the bottom-right and a highlight to the top-left (the well's
+       colors, outside instead of inset). */
+    --raised-bg: var(--color-bg);
+    --raised-bg-hover: #f3ebda;
+    --raised-border: transparent;
+    --shadow-raised: 3px 3px 6px #cbc3b2, -3px -3px 6px #fffff0;
     --shadow-pop: 0 0.5rem 1.5rem -0.5rem rgb(60 40 20 / 0.35);
 
     --nav-h: 3.75rem;
@@ -97,6 +103,11 @@
       --shadow-well-sm: inset 0 1px 0 rgb(0 0 0 / 0.5), 0 1px 0 rgb(255 255 255 / 0.06);
       /* Raised: lit top edge, short dark shadow below. */
       --shadow-raised: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 1px 2px rgb(0 0 0 / 0.5);
+      /* Dark keeps a lighter surface with an edge: soft outer shadows
+         vanish on a near-black page. */
+      --raised-bg: var(--color-surface);
+      --raised-bg-hover: var(--color-surface-hover);
+      --raised-border: var(--color-raised-edge);
       --shadow-pop: 0 0.5rem 1.5rem -0.5rem rgb(0 0 0 / 0.7);
     }
   }

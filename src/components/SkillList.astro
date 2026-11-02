@@ -90,8 +90,8 @@ const uses = await getSkillUses();
   }
 
   button.skill {
-    border-color: var(--color-raised-edge);
-    background: var(--color-surface);
+    border-color: var(--raised-border);
+    background: var(--raised-bg);
     color: var(--color-text);
     cursor: pointer;
     box-shadow: var(--shadow-raised);
@@ -99,7 +99,7 @@ const uses = await getSkillUses();
     anchor-name: --skill;
 
     &:hover {
-      background: var(--color-surface-hover);
+      background: var(--raised-bg-hover);
     }
 
     /* Same sunken "pressed" well as the nav. */

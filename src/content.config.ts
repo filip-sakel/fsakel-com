@@ -69,7 +69,8 @@ const hobbies = defineCollection({
       blurb: z.string(),
       /** Iconify name, e.g. `material-symbols:pool-rounded`. */
       icon: z.string().optional(),
-      photos: z.array(z.object({ src: image(), alt: z.string() })).default([]),
+      /** `alt` describes the image; `caption`, if set, is shown under it. */
+      photos: z.array(z.object({ src: image(), alt: z.string(), caption: z.string().optional() })).default([]),
       links: z.array(link).default([]),
       order: z.number().default(0),
       draft: z.boolean().default(false),
