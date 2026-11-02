@@ -1,0 +1,106 @@
+---
+import { Image } from 'astro:assets';
+import { Icon } from 'astro-icon/components';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getHobbies, hasWriteUp } from '../../data/content';
+
+const hobbies = await getHobbies();
+---
+
+<BaseLayout title="Hobbies" description="Running, swimming, biking, public transit, and open source.">
+  <div class="page wrap">
+    <h1>Hobbies</h1>
+    <ul class="cards" role="list">
+      {
+        hobbies.map((h) => (
+          <li class="card" id={h.id}>
+            <h2>
+              {h.data.icon && <Icon name={h.data.icon} size={22} aria-hidden="true" />}
+              {hasWriteUp(h) ? <a href={`/hobbies/${h.id}/`}>{h.data.title}</a> : h.data.title}
+            </h2>
+            <p>{h.data.blurb}</p>
+            {h.data.photos.length > 0 && (
+              <div class="photos">
+                {h.data.photos.map((p) => (
+                  <Image src={p.src} alt={p.alt} width={480} />
+                ))}
+              </div>
+            )}
+            {h.data.links.length > 0 && (
+              <ul class="links" role="list">
+                {h.data.links.map((l) => (
+                  <li>
+                    <a href={l.href}>{l.label}</a>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</BaseLayout>
+
+<style>
+  .page {
+    padding-top: var(--space-l);
+
+    & h1 {
+      font-size: var(--step-3);
+      margin-bottom: var(--space-xl);
+      text-align: center;
+    }
+  }
+
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr));
+    gap: var(--space-m);
+  }
+
+  .card {
+    padding: var(--space-m);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-s);
+    background: var(--color-surface);
+
+    & h2 {
+      display: flex;
+      align-items: center;
+      gap: 0.45em;
+      margin-bottom: var(--space-xs);
+      font-size: var(--step-1);
+
+      & svg {
+        color: var(--color-accent);
+        flex: none;
+      }
+    }
+
+    & p {
+      color: var(--color-muted);
+    }
+  }
+
+  .photos {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr));
+    gap: var(--space-xs);
+    margin-top: var(--space-s);
+
+    & img {
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      object-fit: cover;
+      border-radius: calc(var(--radius-s) - 2px);
+    }
+  }
+
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-s);
+    margin-top: var(--space-s);
+  }
+</style>

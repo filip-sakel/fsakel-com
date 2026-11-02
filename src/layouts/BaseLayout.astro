@@ -1,0 +1,123 @@
+---
+import '@fontsource-variable/hanken-grotesk';
+import '@fontsource/ibm-plex-mono/400.css';
+import '../styles/tokens.css';
+import '../styles/base.css';
+import hankenLatin from '@fontsource-variable/hanken-grotesk/files/hanken-grotesk-latin-wght-normal.woff2?url';
+
+import { Icon } from 'astro-icon/components';
+import Nav from '../components/Nav.astro';
+import { nav, site, social } from '../data/site';
+
+interface Props {
+  title?: string | undefined;
+  description?: string | undefined;
+}
+const { title, description = site.description } = Astro.props;
+const fullTitle = title ? `${title} · ${site.name}` : site.name;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="preload" href={hankenLatin} as="font" type="font/woff2" crossorigin />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    <meta name="theme-color" content="#efe5d1" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#1c1a16" media="(prefers-color-scheme: dark)" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <!-- Optional enhancement: page-slide direction follows the nav order. -->
+    <meta name="nav-order" content={nav.map((n) => n.href).join(' ')} />
+    <script is:inline src="/vt.js"></script>
+    <slot name="head" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <Nav />
+    <main id="main">
+      <slot />
+    </main>
+    <footer class="site-footer" aria-labelledby="contact-title">
+      <h2 id="contact-title">Contact</h2>
+      <ul class="contact" role="list">
+        {
+          social.map((s) => (
+            <li>
+              <a href={s.href} rel="me noopener">
+                <Icon name={s.icon} size={20} aria-hidden="true" />
+                <span>{s.label}</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+      <p class="fine">© {new Date().getFullYear()} {site.name}</p>
+    </footer>
+  </body>
+</html>
+
+<style>
+  .site-footer {
+    display: grid;
+    justify-items: center;
+    gap: var(--space-xs);
+    margin-top: var(--space-2xl);
+    padding: var(--space-xl) var(--gutter) var(--space-l);
+    border-top: 1px solid var(--color-line);
+    text-align: center;
+
+    & h2 {
+      font-size: var(--step-1);
+    }
+  }
+
+  .contact {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-s);
+    margin-top: var(--space-xs);
+
+    & a {
+      display: flex;
+      align-items: center;
+      gap: 0.5em;
+      min-height: 2.75rem;
+      padding: 0 var(--space-m) 0 var(--space-s);
+      border: 1px solid var(--color-line);
+      border-radius: 0.8rem;
+      background: var(--color-surface);
+      box-shadow: var(--shadow-raised);
+      text-decoration: none;
+      transition:
+        background-color 0.15s,
+        box-shadow 0.15s;
+
+      &:hover {
+        background: var(--color-surface-hover);
+      }
+
+      /* Same sunken well as a pressed nav item. */
+      &:active {
+        background: var(--well-bg);
+        border-color: transparent;
+        box-shadow: var(--shadow-well);
+      }
+    }
+  }
+
+  .fine {
+    margin-top: var(--space-s);
+    color: var(--color-muted);
+    font-size: var(--step--1);
+  }
+</style>

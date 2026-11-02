@@ -1,0 +1,33 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import EntryItem from '../../components/EntryItem.astro';
+import { getEntries, isOnProjects } from '../../data/content';
+
+const entries = (await getEntries()).filter(isOnProjects);
+---
+
+<BaseLayout title="Projects & Awards" description="Roles, research, projects, and awards by Filip Sakellariou.">
+  <div class="page wrap">
+    <h1>Projects &amp; Awards</h1>
+    <ul class="list" role="list">
+      {entries.map((entry) => <EntryItem entry={entry} level={2} />)}
+    </ul>
+  </div>
+</BaseLayout>
+
+<style>
+  .page {
+    max-width: var(--content-max);
+    padding-top: var(--space-l);
+
+    & h1 {
+      font-size: var(--step-3);
+      margin-bottom: var(--space-xl);
+    }
+  }
+
+  .list {
+    display: grid;
+    gap: var(--space-xl);
+  }
+</style>

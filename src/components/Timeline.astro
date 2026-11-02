@@ -1,0 +1,171 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import TimelineEntry from './TimelineEntry.astro';
+
+interface Props {
+  id: string;
+  title: string;
+  entries: CollectionEntry<'projects'>[];
+}
+const { id, title, entries } = Astro.props;
+---
+
+<section class="timeline-section" id={id} aria-labelledby={`${id}-title`}>
+  <h2 class="section-title" id={`${id}-title`}>{title}</h2>
+  <div class="timeline wrap">
+    <ol role="list">
+      {entries.map((entry) => <TimelineEntry entry={entry} />)}
+    </ol>
+    <!-- The one "you are here" dot: pinned at --dot-y for the length of
+         the rail, then carried off with the rail's end. -->
+    <div class="track" aria-hidden="true">
+      <span class="now"><span class="now-dot"></span></span>
+    </div>
+  </div>
+  <p class="more"><a href="/projects/">All projects →</a></p>
+</section>
+
+<style>
+  .timeline-section {
+    padding-top: var(--space-l);
+  }
+
+  .section-title {
+    margin-bottom: var(--space-xl);
+  }
+
+  .timeline {
+    position: relative;
+    max-width: 50rem;
+    /* Geometry shared with TimelineEntry. --dot-y is where the pinned dot
+       sits, measured from the top of the viewport. */
+    --dot-y: max(var(--nav-h) + 5rem, 38svh);
+    --marker-h: 1.5rem;
+    --marker-w: 1.5rem;
+    --dot: 0.875rem;
+    --date-w: 6.5rem;
+    --col-gap: var(--space-s);
+    /* Marker's offset from the entry top (mobile: below the date). */
+    --marker-top: var(--marker-h);
+    /* Left edge of the rail column. */
+    --rail-left: 0px;
+
+    @media (width >= 40rem) {
+      --col-gap: var(--space-m);
+      --marker-top: 0px;
+      --rail-left: calc(var(--date-w) + var(--col-gap));
+    }
+  }
+
+  /* Spans the rail from the first marker to the rail's end; the sticky
+     dot inside it is confined to exactly that stretch. */
+  .track {
+    display: none;
+    position: absolute;
+    top: var(--marker-top);
+    /* Extend past the rail end by the dot's inset in its marker box, so
+       the parked dot's bottom edge lands exactly on the rail's end. */
+    bottom: calc((var(--dot) - var(--marker-h)) / 2);
+    left: var(--rail-left);
+    width: var(--marker-w);
+    pointer-events: none;
+    /* Keep the glow on the rail: nothing past the rail's ends (the
+       bottom inset undoes the extension above). */
+    clip-path: inset(0 -1rem calc((var(--marker-h) - var(--dot)) / 2));
+  }
+
+  .now {
+    position: sticky;
+    top: var(--dot-y);
+    z-index: 1;
+    height: var(--marker-h);
+    display: grid;
+    place-items: center;
+  }
+
+  .now-dot {
+    position: relative;
+    width: var(--dot);
+    height: var(--dot);
+    border-radius: 999px;
+    background: var(--color-marker);
+
+    /* Glow along the rail, above and below. */
+    &::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 4px;
+      height: 6.5rem;
+      translate: -50% -50%;
+      border-radius: 2px;
+      background: linear-gradient(
+        transparent,
+        var(--color-marker) 42%,
+        var(--color-marker) 58%,
+        transparent
+      );
+      z-index: -1;
+    }
+  }
+
+  /* Without scroll-driven animations there is no pinned dot: entries keep
+     their own static markers. With them, the dot appears the instant the
+     first marker reaches the line (that marker hides at the same moment). */
+  @supports (animation-timeline: view()) {
+    .track {
+      display: block;
+      view-timeline: --track block;
+      view-timeline-inset: var(--dot-y) calc(100% - var(--dot-y) - var(--marker-h));
+    }
+
+    .now {
+      animation: now-in step-end both;
+      animation-timeline: --track;
+      animation-range: cover 0% contain 0%;
+    }
+  }
+
+  @keyframes now-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .more {
+    text-align: center;
+    margin-top: var(--space-l);
+  }
+
+  /* M1, second half: the real heading rises in as the cue fades
+     (reduced motion: sharpens from a blur, no movement). */
+  @supports (animation-timeline: view()) {
+    .section-title {
+      animation: heading-in linear both;
+      animation-timeline: view();
+      animation-range: entry 20% entry 100%;
+
+      @media (prefers-reduced-motion: reduce) {
+        animation-name: heading-unblur;
+      }
+    }
+  }
+
+  @keyframes heading-in {
+    from {
+      opacity: 0;
+      translate: 0 1.5rem;
+    }
+  }
+
+  @keyframes heading-unblur {
+    from {
+      opacity: 0;
+      filter: blur(6px);
+    }
+  }
+</style>

@@ -1,0 +1,81 @@
+---
+import BaseLayout from './BaseLayout.astro';
+
+interface Props {
+  title: string;
+  description?: string;
+  meta?: string;
+  back: { href: string; label: string };
+}
+const { title, description, meta, back } = Astro.props;
+---
+
+<BaseLayout title={title} description={description}>
+  <article class="article wrap">
+    <a class="back" href={back.href}>← {back.label}</a>
+    <header>
+      <h1>{title}</h1>
+      {meta && <p class="meta">{meta}</p>}
+    </header>
+    <div class="prose">
+      <slot />
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  .article {
+    max-width: var(--content-max);
+    padding-top: var(--space-l);
+  }
+
+  .back {
+    font-size: var(--step--1);
+    color: var(--color-muted);
+  }
+
+  header {
+    margin-block: var(--space-m) var(--space-l);
+
+    & h1 {
+      font-size: var(--step-3);
+    }
+  }
+
+  .meta {
+    margin-top: var(--space-xs);
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    color: var(--color-muted);
+  }
+
+  .prose {
+    font-size: var(--step-0);
+    line-height: 1.65;
+
+    & :global(* + *) {
+      margin-top: 1em;
+    }
+    & :global(h2) {
+      margin-top: 2em;
+      font-size: var(--step-2);
+    }
+    & :global(h3) {
+      margin-top: 1.6em;
+      font-size: var(--step-1);
+    }
+    & :global(img) {
+      border-radius: var(--radius-s);
+    }
+    & :global(pre) {
+      padding: var(--space-m);
+      overflow-x: auto;
+      border-radius: var(--radius-s);
+      font-size: var(--step--1);
+    }
+    & :global(code) {
+      font-family: var(--font-mono);
+      font-size: 0.9em;
+    }
+  }
+</style>

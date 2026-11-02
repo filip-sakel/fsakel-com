@@ -1,0 +1,37 @@
+---
+import { Icon } from 'astro-icon/components';
+import { social } from '../data/site';
+---
+
+<ul class="social" role="list">
+  {
+    social.map((s) => (
+      <li>
+        <a href={s.href} rel="me noopener" aria-label={s.label} title={s.label}>
+          <Icon name={s.icon} size={22} aria-hidden="true" />
+        </a>
+      </li>
+    ))
+  }
+</ul>
+
+<style>
+  .social {
+    display: flex;
+    gap: var(--space-2xs);
+  }
+
+  a {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 999px;
+    color: var(--color-muted);
+    transition: color 0.2s;
+
+    &:hover {
+      color: var(--color-text);
+    }
+  }
+</style>

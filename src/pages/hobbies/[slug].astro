@@ -1,0 +1,19 @@
+---
+import { render } from 'astro:content';
+import ArticleLayout from '../../layouts/ArticleLayout.astro';
+import { getHobbies, hasWriteUp } from '../../data/content';
+
+export async function getStaticPaths() {
+  return (await getHobbies()).filter(hasWriteUp).map((entry) => ({
+    params: { slug: entry.id },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+---
+
+<ArticleLayout title={entry.data.title} description={entry.data.blurb} back={{ href: '/hobbies/', label: 'Hobbies' }}>
+  <Content />
+</ArticleLayout>

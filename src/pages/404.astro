@@ -1,0 +1,24 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Not found">
+  <div class="page wrap">
+    <h1>Page not found</h1>
+    <p><a href="/">Back home</a></p>
+  </div>
+</BaseLayout>
+
+<style>
+  .page {
+    display: grid;
+    gap: var(--space-m);
+    justify-items: center;
+    padding-block: var(--space-2xl);
+    text-align: center;
+
+    & h1 {
+      font-size: var(--step-3);
+    }
+  }
+</style>

@@ -1,0 +1,24 @@
+---
+import { render } from 'astro:content';
+import ArticleLayout from '../../layouts/ArticleLayout.astro';
+import { getEntries, formatRange, hasWriteUp } from '../../data/content';
+
+export async function getStaticPaths() {
+  return (await getEntries()).filter(hasWriteUp).map((entry) => ({
+    params: { slug: entry.id },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { title, org, start, end } = entry.data;
+const { Content } = await render(entry);
+---
+
+<ArticleLayout
+  title={org ? `${title}, ${org}` : title}
+  meta={formatRange(start, end)}
+  back={{ href: '/projects/', label: 'Projects' }}
+>
+  <Content />
+</ArticleLayout>

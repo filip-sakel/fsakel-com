@@ -1,0 +1,65 @@
+---
+/** Compact education summary for the home page. */
+import { getSchools } from '../data/content';
+
+const schools = await getSchools();
+---
+
+<section class="education wrap" id="education" aria-labelledby="education-title">
+  <h2 class="section-title" id="education-title">Education</h2>
+  <ul role="list">
+    {
+      schools.map(({ id, data }) => (
+        <li>
+          <div class="head">
+            <h3>
+              <a href={`/education/#${id}`}>{data.school}</a>
+            </h3>
+            {data.when && <p class="meta">{data.when}</p>}
+          </div>
+          <p>{data.degree}</p>
+        </li>
+      ))
+    }
+  </ul>
+  <p class="more"><a href="/education/">Education &amp; skills →</a></p>
+</section>
+
+<style>
+  .education {
+    max-width: var(--content-max);
+    padding-top: var(--space-xl);
+
+    & ul {
+      display: grid;
+      gap: var(--space-m);
+      margin-top: var(--space-l);
+    }
+  }
+
+  .head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0 var(--space-m);
+
+    & h3 {
+      font-size: var(--step-1);
+    }
+    & a {
+      text-decoration: none;
+    }
+  }
+
+  .meta {
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    color: var(--color-muted);
+  }
+
+  .more {
+    margin-top: var(--space-l);
+    text-align: center;
+  }
+</style>

@@ -1,0 +1,131 @@
+---
+import { Image } from 'astro:assets';
+import { site } from '../data/site';
+import ScrollCue from './ScrollCue.astro';
+import SocialLinks from './SocialLinks.astro';
+// Hand-kerned wordmark exported from the design file (fill = currentColor).
+import NameMark from '../assets/name.svg';
+---
+
+<section class="hero" aria-labelledby="hero-name">
+  <div class="hero-inner wrap">
+    <div class="hero-text">
+      <h1 id="hero-name">
+        <span class="visually-hidden">{site.name}</span>
+        <NameMark class="name-mark" aria-hidden="true" focusable="false" />
+      </h1>
+      <p class="tagline">{site.tagline}</p>
+      <SocialLinks />
+    </div>
+    <Image
+      class="photo"
+      src={site.photo}
+      alt={site.photoAlt}
+      widths={[240, 301]}
+      sizes="(min-width: 48rem) 15rem, 12rem"
+      loading="eager"
+      fetchpriority="high"
+    />
+  </div>
+  <ScrollCue href="#highlights" label="Project Highlights" />
+</section>
+
+<style>
+  .hero {
+    min-height: calc(100svh - var(--nav-h));
+    display: grid;
+    grid-template-rows: 1fr auto;
+    padding-bottom: var(--space-l);
+  }
+
+  .hero-inner {
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: var(--space-l);
+    text-align: center;
+    max-width: 44rem;
+    padding-block: var(--space-l);
+
+    @media (width >= 48rem) {
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      justify-items: start;
+      text-align: start;
+      gap: var(--space-xl);
+    }
+  }
+
+  .hero-text {
+    display: grid;
+    justify-items: center;
+    gap: var(--space-s);
+
+    @media (width >= 48rem) {
+      order: -1;
+      justify-items: start;
+    }
+
+    & :global(.social) {
+      margin-inline: -0.6rem;
+    }
+  }
+
+  h1 {
+    font-size: var(--step-3);
+    color: var(--color-text);
+  }
+
+  /* 32 viewBox units tall with a 24-unit cap height; sized so the caps
+     match type set at --step-3. */
+  .name-mark {
+    height: 0.93em;
+    /* Optical alignment with the tagline below. */
+    margin-inline-start: 0.03em;
+    width: auto;
+  }
+
+  .tagline {
+    max-width: 22em;
+  }
+
+  .photo {
+    order: -1;
+    width: clamp(10rem, 40vw, 15rem);
+    aspect-ratio: 301 / 375;
+    object-fit: cover;
+    border-radius: var(--radius-photo);
+    /* Hairline drawn over the photo's edge, as in the mockup. */
+    outline: 0.5px solid var(--color-photo-stroke);
+    outline-offset: -0.5px;
+    box-shadow: var(--shadow-photo);
+
+    @media (width >= 48rem) {
+      order: 0;
+    }
+  }
+
+  /* M6: text settles in on load (reduced motion: blur-in, no movement).
+     The photo is the LCP element, so it is never hidden. */
+  .hero-text {
+    animation: rise 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+
+    @media (prefers-reduced-motion: reduce) {
+      animation-name: unblur;
+    }
+  }
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      translate: 0 0.5rem;
+    }
+  }
+
+  @keyframes unblur {
+    from {
+      opacity: 0;
+      filter: blur(6px);
+    }
+  }
+</style>

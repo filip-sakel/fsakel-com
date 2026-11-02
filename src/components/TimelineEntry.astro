@@ -1,0 +1,248 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { Image } from 'astro:assets';
+import { formatMonth, hasWriteUp } from '../data/content';
+
+interface Props {
+  entry: CollectionEntry<'projects'>;
+}
+const { entry } = Astro.props;
+const { title, org, start, logo, logoAlt, summary } = entry.data;
+if (!start) throw new Error(`Highlighted entry "${entry.id}" needs a start date`);
+---
+
+<li class="entry">
+  <!-- Scroll-timeline probe: where this entry's marker sits. -->
+  <span class="probe" aria-hidden="true"></span>
+
+  <time class="date" datetime={start}>{formatMonth(start)}</time>
+  <span class="marker" aria-hidden="true"><span class="dot"></span></span>
+
+  <div class="body">
+    <h3>
+      {title}{org && <span class="org">, {org}</span>}
+    </h3>
+    {
+      summary.length > 0 && (
+        <ul class="bullets">
+          {summary.map((s) => (
+            <li>{s}</li>
+          ))}
+        </ul>
+      )
+    }
+    {hasWriteUp(entry) && <a class="read-more" href={`/projects/${entry.id}/`}>Read more</a>}
+  </div>
+
+  {logo && <Image class="logo" src={logo} alt={logoAlt} width={96} />}
+</li>
+
+<style>
+  /* ---------------------------------------------------------------
+     Layout. Geometry (--marker-w, --marker-top, --dot, …) is set on the
+     timeline in Timeline.astro, which also owns the single pinned dot.
+     Entries butt against each other so the rail is continuous; spacing
+     is padding on .body.
+     --------------------------------------------------------------- */
+  .entry {
+    position: relative;
+    display: grid;
+    grid-template-columns: var(--marker-w) 1fr;
+    grid-template-areas:
+      'rail date'
+      'rail body';
+    column-gap: var(--col-gap);
+    --gap-after: clamp(3.5rem, 16svh, 8rem);
+
+    @media (width >= 40rem) {
+      grid-template-columns: var(--date-w) var(--marker-w) 1fr 6rem;
+      grid-template-areas: 'date rail body logo';
+    }
+
+    /* Rail segment. */
+    &::before {
+      content: '';
+      grid-area: rail;
+      grid-row: 1 / -1;
+      justify-self: center;
+      width: 4px;
+      background: var(--color-rail);
+    }
+
+    &:first-child::before {
+      margin-top: calc(var(--marker-top) + var(--marker-h) / 2);
+      border-start-start-radius: 2px;
+      border-start-end-radius: 2px;
+    }
+
+    &:last-child::before {
+      border-end-start-radius: 2px;
+      border-end-end-radius: 2px;
+    }
+
+    &:last-child {
+      --gap-after: clamp(6rem, 40svh, 18rem);
+    }
+  }
+
+  .date {
+    grid-area: date;
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    line-height: var(--marker-h);
+    white-space: nowrap;
+
+    @media (width >= 40rem) {
+      text-align: end;
+    }
+  }
+
+  .marker {
+    grid-area: rail;
+    grid-row: 1 / -1;
+    align-self: start;
+    height: var(--marker-h);
+    margin-top: var(--marker-top);
+    display: grid;
+    place-items: center;
+  }
+
+  .dot {
+    width: var(--dot);
+    height: var(--dot);
+    border-radius: 999px;
+    background: var(--color-marker);
+  }
+
+  .body {
+    grid-area: body;
+    min-width: 0;
+    padding-bottom: var(--gap-after);
+
+    & h3 {
+      font-size: var(--step-0);
+      font-weight: 500;
+      line-height: var(--marker-h);
+    }
+  }
+
+  .org {
+    font-weight: 400;
+  }
+
+  .bullets {
+    margin-top: var(--space-2xs);
+    padding-left: 1.25rem;
+    font-size: var(--step--1);
+    list-style: square;
+
+    & li::marker {
+      font-size: 0.7em;
+    }
+    & li + li {
+      margin-top: 0.15rem;
+    }
+  }
+
+  .read-more {
+    display: inline-block;
+    margin-top: var(--space-xs);
+    font-size: var(--step--1);
+  }
+
+  .logo {
+    grid-area: logo;
+    display: none;
+    width: 6rem;
+    height: auto;
+
+    @media (width >= 40rem) {
+      display: block;
+    }
+  }
+
+  .probe {
+    position: absolute;
+    top: var(--marker-top);
+    left: 0;
+    width: 1px;
+    height: var(--marker-h);
+    pointer-events: none;
+    visibility: hidden;
+  }
+
+  /* ---------------------------------------------------------------
+     Markers (fallback = a static rose circle per entry).
+
+     The probe's view timeline is inset so the "scrollport" starts at the
+     dot line (--dot-y): `contain 100%` / `exit 0%` is the moment this
+     marker reaches the line.
+
+     - Markers stay rose throughout. Rising toward the line, a marker
+       grows from a flat pill into a circle (shape only; same in reduced
+       motion, since the reader's scrolling drives it).
+     - At the line it lands exactly under the pinned dot and is hidden at
+       once, so only one dot is ever at the line.
+     --------------------------------------------------------------- */
+  @supports (animation-timeline: view()) {
+    .entry {
+      timeline-scope: --arrive;
+      view-timeline: --active block;
+      view-timeline-inset: var(--dot-y) calc(100% - var(--dot-y) - var(--marker-h));
+    }
+
+    .probe {
+      view-timeline: --arrive block;
+      view-timeline-inset: var(--dot-y) 0;
+    }
+
+    .dot {
+      animation:
+        dot-arrive linear both,
+        dot-gone step-start both;
+      animation-timeline: --arrive, --arrive;
+      animation-range:
+        contain 50% contain 100%,
+        exit 0% exit 100%;
+    }
+
+    .body,
+    .date,
+    .logo {
+      animation: entry-focus linear both;
+      animation-timeline: --active;
+      animation-range: cover 0% cover 100%;
+    }
+  }
+
+  @keyframes dot-arrive {
+    from {
+      width: 0.75rem;
+      height: 0.25rem;
+    }
+  }
+
+  @keyframes dot-gone {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
+  /* Upcoming and passed entries are slightly dimmed; the one at the dot is
+     full strength. 0.75 keeps dimmed text above 4.5:1 in both themes. */
+  @keyframes entry-focus {
+    0% {
+      opacity: 0.75;
+    }
+    3%,
+    90% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0.75;
+    }
+  }
+</style>

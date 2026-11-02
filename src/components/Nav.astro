@@ -1,0 +1,98 @@
+---
+import { Icon } from 'astro-icon/components';
+import { nav } from '../data/site';
+
+const path = Astro.url.pathname.replace(/\/?$/, '/');
+const isCurrent = (href: string) => (href === '/' ? path === '/' : path.startsWith(href));
+---
+
+<header class="site-header">
+  <nav class="site-nav" aria-label="Main">
+    <ul role="list">
+      {
+        nav.map((item) => (
+          <li>
+            <a href={item.href} aria-current={isCurrent(item.href) ? 'page' : undefined}>
+              <Icon name={item.icon} size={18} aria-hidden="true" />
+              <span>{item.label}</span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </nav>
+</header>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    height: var(--nav-h);
+    display: grid;
+    place-items: center;
+    padding-inline: var(--space-xs);
+    /* Solid behind the whole button row, then a soft fade below it, so
+       scrolled content never shows through the buttons. */
+    background: var(--color-bg);
+    view-transition-name: site-nav;
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 100% 0 auto;
+      height: var(--space-m);
+      background: linear-gradient(var(--color-bg), transparent);
+      pointer-events: none;
+    }
+  }
+
+  ul {
+    display: flex;
+    gap: clamp(0rem, 1.5vw, 1rem);
+  }
+
+  a {
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+    /* 36px: above WCAG 2.2's 24px target minimum, slimmer than before. */
+    min-height: 2.25rem;
+    padding: 0 clamp(0.55rem, 2.2vw, 1.05rem);
+    /* Hairline, as in the design; only visible on the selected well. */
+    border: 0.5px solid transparent;
+    border-radius: 0.8rem;
+    color: var(--color-muted);
+    font-size: clamp(0.875rem, 0.8rem + 0.4vw, 1rem);
+    text-decoration: none;
+    transition:
+      color 0.2s,
+      box-shadow 0.15s,
+      background-color 0.15s;
+
+    &:hover {
+      color: var(--color-text);
+    }
+
+    /* Pressing any item sinks it, previewing the selected state. */
+    &:active,
+    &[aria-current='page'] {
+      color: var(--color-accent);
+      background: var(--well-bg);
+      border-color: transparent;
+      box-shadow: var(--shadow-well);
+    }
+
+    &[aria-current='page'] :global(svg) {
+      /* Icon and label sit slightly lower in the well. */
+      translate: 0 0.5px;
+    }
+  }
+
+  /* Very narrow phones: icons go before labels shrink further. */
+  @media (width < 400px) {
+    a :global(svg) {
+      display: none;
+    }
+  }
+</style>
