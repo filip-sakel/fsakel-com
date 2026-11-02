@@ -1,0 +1,45 @@
+# The public edge: terminates TLS (HTTP/1.1, HTTP/2 and HTTP/3) for every
+# site on this server and proxies each to its private server on the host's
+# loopback. It runs with host networking (compose.yaml), so {remote_host} is
+# the client's own address and the per-IP rate limit below means what it says.
+#
+# Caddy fetches and renews a Let's Encrypt certificate for each domain and
+# redirects HTTP to HTTPS. HTTP/3 is on by default on 443/udp.
+
+{
+	# Host networking would put the admin API on the host's localhost:2019,
+	# where any local user could rewrite the config.
+	admin off
+}
+
+{$FSAKEL_ADDRESS:fsakel.com} {
+	log
+	reverse_proxy 127.0.0.1:3000
+}
+
+# swift-typegraph: its web container serves the client and proxies /api to the
+# gateway; the limits on the public analyzer endpoint live here, at the edge.
+{$TYPEGRAPH_ADDRESS:typegraph.fsakel.com} {
+	log
+
+	handle /api/analyze {
+		# A typing user sends ~3 requests/s (300 ms debounce); the headroom
+		# absorbs Run presses and retries. Over the limit: 429 without a body.
+		rate_limit {
+			zone analyze {
+				key {remote_host}
+				window 5s
+				events 25
+			}
+		}
+		# 8 KiB of source, JSON-escaped, fits easily; the gateway checks the real limit.
+		request_body {
+			max_size 64KB
+		}
+		reverse_proxy 127.0.0.1:4000
+	}
+
+	handle {
+		reverse_proxy 127.0.0.1:4000
+	}
+}

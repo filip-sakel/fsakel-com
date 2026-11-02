@@ -1,0 +1,52 @@
+# docker compose up -d --build   (or: podman compose up -d --build)
+#
+#   edge   public Caddy on 80/443 (+443/udp, HTTP/3): TLS and routing
+#            fsakel.com           → 127.0.0.1:3000 (site, below)
+#            typegraph.fsakel.com → 127.0.0.1:4000 (swift-typegraph's compose.yaml)
+#   site   this site's static server, on 127.0.0.1:3000
+#
+# .env may set FSAKEL_ADDRESS and TYPEGRAPH_ADDRESS to other domains, or to
+# e.g. http://localhost:8000 to try the edge without certificates.
+
+services:
+  site:
+    build:
+      context: .
+      dockerfile: Containerfile
+    ports:
+      - "127.0.0.1:3000:3000"
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    restart: unless-stopped
+
+  edge:
+    build:
+      context: .
+      dockerfile: edge/Containerfile
+    environment:
+      FSAKEL_ADDRESS: ${FSAKEL_ADDRESS:-fsakel.com}
+      TYPEGRAPH_ADDRESS: ${TYPEGRAPH_ADDRESS:-typegraph.fsakel.com}
+    # Host networking: Caddy sees each client's real address (the typegraph
+    # rate limit is per address) and reaches the private servers on the host's
+    # loopback. Published ports would hide client addresses behind
+    # rootlessport (rootless podman) or docker-proxy (Docker, for IPv6).
+    # Rootless podman binds 80/443 only after lowering
+    # net.ipv4.ip_unprivileged_port_start (DEPLOY.md).
+    network_mode: host
+    volumes:
+      # Certificates and ACME account; losing them means re-issuing, which
+      # Let's Encrypt rate-limits.
+      - caddy_data:/data
+      - caddy_config:/config
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    cap_add: [NET_BIND_SERVICE]
+    security_opt: ["no-new-privileges:true"]
+    restart: unless-stopped
+
+volumes:
+  caddy_data:
+  caddy_config:

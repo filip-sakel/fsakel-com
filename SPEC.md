@@ -13,7 +13,7 @@ Scope of this document: architecture, content model, and the Phase 1 prototype. 
 4. **CSS-first motion.** Animations use modern CSS (scroll-driven animations, view transitions). Each one is a progressive enhancement: unsupported browsers, or users with `prefers-reduced-motion: reduce`, get the static layout, which must look intentional rather than broken.
 5. **Desktop and mobile are equal targets.** Layout is mobile-first. Desktop must also match `design/home-design.pdf`.
 6. **Easy to edit.** Adding an experience entry, project, write-up, or hobby means adding one Markdown file. No component code changes.
-7. **Deployment**: a rootless Podman container behind the host's Caddy reverse proxy. Domain wiring alongside the existing subdomain happens later (§9).
+7. **Deployment**: a container behind the server's public Caddy edge, which also fronts swift-typegraph (§9).
 
 ## 2. Stack
 
@@ -56,8 +56,13 @@ fsakel-com/
 ├── package.json / pnpm-lock.yaml
 ├── tsconfig.json
 ├── Containerfile
+├── compose.yaml                # site (:3000) + edge (80/443)
+├── DEPLOY.md                   # server setup
 ├── deploy/
 │   └── Caddyfile               # in-container static server config
+├── edge/
+│   ├── Containerfile           # xcaddy + caddy-ratelimit
+│   └── Caddyfile               # public TLS edge and routing
 ├── public/
 │   ├── files/                  # PDFs served as-is (paper, certificates)
 │   └── favicon.svg
@@ -222,9 +227,11 @@ The default (unguarded) CSS is always the finished static state.
 - **Dev**: `pnpm dev`; **build**: `pnpm build`, producing `dist/`; **preview**: `pnpm preview`.
 - **Containerfile** (multi-stage):
   1. `node:24-alpine`: enable corepack, run `pnpm install --frozen-lockfile`, then `pnpm build`.
-  2. `caddy:2-alpine`: copy `dist/` to `/srv` and run `caddy file-server` on **port 8080** as a non-root user. It handles gzip/zstd, `Cache-Control: public, max-age=31536000, immutable` for `/_astro/*` (hashed assets), `no-cache` for HTML, security headers (strict CSP: `default-src 'self'`; no `'unsafe-inline'` for scripts), and the `404.html` fallback.
-- **Run**: `podman build -t fsakel-com .` then `podman run -d -p 127.0.0.1:8080:8080 fsakel-com`. Rootless; it binds only to localhost and the host Caddy proxies to it. A Podman Quadlet `.container` unit (systemd user service) is the intended way to run it on the server.
-- **Deferred**: host Caddyfile changes to serve `mysite.com` next to the existing `nested.mysite.com`, TLS, and a CI/build-and-push workflow.
+  2. `caddy:2-alpine`: copy `dist/` to `/srv` and run `caddy file-server` on **port 3000** as a non-root user. It handles gzip/zstd, `Cache-Control: public, max-age=31536000, immutable` for `/_astro/*` (hashed assets), `no-cache` for HTML, security headers (strict CSP: `default-src 'self'`; no `'unsafe-inline'` for scripts), and the `404.html` fallback.
+- **Run**: `docker compose up -d --build` (or `podman compose`). `compose.yaml` runs two services:
+  - `site`: the container above, published on `127.0.0.1:3000` only.
+  - `edge`: the server's public Caddy (`edge/`), built with the `caddy-ratelimit` plugin and run with host networking so it sees client addresses. It terminates TLS for every site (Let's Encrypt, HTTP/3 on 443/udp; certificates on the `caddy_data` volume) and routes `fsakel.com` → `127.0.0.1:3000` and `typegraph.fsakel.com` → `127.0.0.1:4000` (swift-typegraph's private `web`), rate-limiting its `/api/analyze` per client. `FSAKEL_ADDRESS` and `TYPEGRAPH_ADDRESS` override the domains. Server setup is in DEPLOY.md.
+- **Deferred**: a CI/build-and-push workflow.
 
 ## 10. Phases
 

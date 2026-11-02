@@ -1,0 +1,11 @@
+# The public edge (edge/Caddyfile): TLS and routing for every site on the
+# server, plus the analyzer rate limit for swift-typegraph.
+
+# Stock Caddy has no rate limiting; compile in the plugin (pinned: it has no
+# recent release tag).
+FROM docker.io/library/caddy:2.11.7-builder-alpine AS caddy
+RUN xcaddy build --with github.com/mholt/caddy-ratelimit@5625512f24f6f59d6f64fb3aafe5eecff0b286db
+
+FROM docker.io/library/caddy:2.11.7-alpine
+COPY --from=caddy /usr/bin/caddy /usr/bin/caddy
+COPY edge/Caddyfile /etc/caddy/Caddyfile
