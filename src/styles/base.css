@@ -116,6 +116,13 @@
     navigation: auto;
   }
 
+  /* The page's own background moves with the root snapshots; paint it
+     behind them too, so any gap during the slide or cross-fade shows the
+     page color instead of the browser's white canvas. */
+  ::view-transition {
+    background: var(--color-bg);
+  }
+
   /* Short ease-out: the page moves on the first frame and lands cleanly.
      (An ease-in start reads as lag; a long decelerating tail reads as
      the page still creeping in.) Reduced motion overrides this below. */
