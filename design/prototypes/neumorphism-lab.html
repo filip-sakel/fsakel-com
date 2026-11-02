@@ -1,0 +1,428 @@
+<!doctype html>
+<!--
+  Neumorphism Prototype Lab: a standalone playground for the site's raised
+  and sunk button styles. Not part of the build (design/ is outside src/
+  and public/, and excluded from the container). Open the file directly in
+  a browser.
+
+  How it works: every shadow and transform is a calc() of four animatable
+  numbers, registered with @property so `transition` can ease them:
+    --d   0 → 1 on :hover (CSS only; an even sink)
+    --p   0 → 1 on :active (press)
+    --px  cursor x within the button, −1 … 1 (set by the script)
+    --py  cursor y within the button, −1 … 1 (set by the script)
+  Without the script (or on touch) the hover/press still work, just without
+  leaning toward the cursor.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Neumorphism Prototype Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500&family=IBM+Plex+Mono&display=swap" rel="stylesheet">
+<style>
+  @property --d  { syntax: '<number>'; inherits: true; initial-value: 0; }
+  @property --p  { syntax: '<number>'; inherits: true; initial-value: 0; }
+  @property --px { syntax: '<number>'; inherits: true; initial-value: 0; }
+  @property --py { syntax: '<number>'; inherits: true; initial-value: 0; }
+
+  /* ---- Tokens (site values from src/styles/tokens.css, plus the
+     shadow colours split into channels so alpha can be computed) ---- */
+  :root {
+    color-scheme: light;
+    --color-bg: #efe5d1;
+    --color-text: #1f1d1a;
+    --color-muted: #625e56;
+    --color-accent: #93502f;
+    --color-line: #ddd3b9;
+    --raised-bg: var(--color-bg);
+    --well-bg:
+      linear-gradient(#f0e5d1 0 0) padding-box,
+      linear-gradient(165deg, #cec2a5 50%, #e0d7c4 50%) border-box;
+    --shadow-well: inset 2px 2px 2.5px #cbc3b2, inset -2px -2px 2.5px #fffff0;
+
+    --shade: 203 195 178;        /* #cbc3b2 */
+    --hilite: 255 255 240;       /* #fffff0 */
+    --well-hilite: 252 250 234;  /* #fcfaea: --hilite nudged toward the bg */
+    --well-edge-a: 206 194 165;  /* #cec2a5: --well-bg edge, dark half */
+    --well-edge-b: 224 215 196;  /* #e0d7c4: --well-bg edge, light half */
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --color-bg: #1c1a16;
+      --color-text: #ede5d0;
+      --color-muted: #a9a194;
+      --color-accent: #e3895c;
+      --color-line: #36322a;
+      --raised-bg: #25221d;
+      --well-bg: #1c1a16;  /* = --color-bg */
+      --shadow-well: inset 0 1px 0 rgb(0 0 0 / 0.55);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --color-bg: #1c1a16;
+    --color-text: #ede5d0;
+    --color-muted: #a9a194;
+    --color-accent: #e3895c;
+    --color-line: #36322a;
+    --raised-bg: #25221d;
+    --well-bg: #1c1a16;
+    --shadow-well: inset 0 1px 0 rgb(0 0 0 / 0.55);
+  }
+
+  /* ---- Page ---- */
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    min-height: 100vh;
+    background: var(--color-bg);
+    color: var(--color-text);
+    font: 400 1rem/1.5 'Hanken Grotesk', system-ui, sans-serif;
+    padding: 2rem 16px 4rem;
+  }
+  a { color: inherit; }
+  .wrap { max-width: 46rem; margin: 0 auto; display: grid; gap: 2rem; }
+  h1 { font-size: 1.4rem; font-weight: 500; }
+  .lede { color: var(--color-muted); font-size: 0.92rem; max-width: 38rem; }
+
+  .stage {
+    display: grid;
+    justify-items: center;
+    gap: 2.5rem;
+    padding: 3rem 1rem;
+    border-block: 1px solid var(--color-line);
+  }
+  .stage h2 { font-size: 1.3rem; font-weight: 500; margin-bottom: -1.5rem; }
+  .pair { display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem; }
+  .zoomed { zoom: 3; }
+  .zoomed .pair { gap: 0.5rem; }
+  .label {
+    font: 0.72rem 'IBM Plex Mono', ui-monospace, monospace;
+    color: var(--color-muted);
+    margin-top: -1.75rem;
+  }
+
+  /* ================================================================
+     Button: raised (.btn) and sunk (.btn.well, the nav's selected item).
+     ================================================================ */
+  .btn {
+    /* Knobs, driven by the panel sliders. */
+    --raised-depth: 0.4;  /* resting lift of raised; 1 = the site's --shadow-raised */
+    --sunk-depth: 0.7;    /* depth of sunk and of a pressed raised; 1 = --shadow-well */
+    --sink: 1;            /* how far hover pushes it down, 0–1 */
+    --tilt: 10deg;        /* max tilt toward the cursor */
+    --tilt-gain: 1;       /* per-style multiplier on --tilt */
+    --aspect: 0.4;        /* height / width, set by the script so both axes tilt equally */
+
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    min-height: 2.75rem;
+    padding: 0 1.25rem 0 0.75rem;
+    border: 1px solid transparent;
+    border-radius: 0.8rem;
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+      --px 0.12s ease-out,
+      --py 0.12s ease-out,
+      --d 0.22s ease-out,
+      --p 0.15s ease-out;
+
+    /* ---- Derived ---- */
+    --a: calc(var(--d) * var(--sink));                  /* hover sink amount */
+    --e: calc(var(--raised-depth) * (1 - var(--p)));    /* lift left after the press */
+    --pd: calc(var(--sunk-depth) * var(--p));           /* well depth the press adds */
+    --pf: var(--p);                                     /* how much the press flattens the tilt */
+    /* Per-side shadow scales. On hover 40% of the sink is even and 60%
+       leans toward the cursor: the shadow under it collapses, the far
+       side's holds, as if the button tipped. */
+    --dark-x:  calc(var(--e) * max(0, 1 - var(--a) * (0.4 + 0.6 * var(--px))));
+    --dark-y:  calc(var(--e) * max(0, 1 - var(--a) * (0.4 + 0.6 * var(--py))));
+    --light-x: calc(var(--e) * max(0, 1 - var(--a) * (0.4 - 0.6 * var(--px))));
+    --light-y: calc(var(--e) * max(0, 1 - var(--a) * (0.4 - 0.6 * var(--py))));
+    --blur:    calc(var(--e) * max(0.35, 1 - var(--a) * 0.45));
+
+    /* Light: outer pair = raised, inset pair = the well, traded by --p. */
+    box-shadow:
+      calc(3px * var(--dark-x)) calc(3px * var(--dark-y)) calc(6px * var(--blur)) rgb(var(--shade)),
+      calc(-3px * var(--light-x)) calc(-3px * var(--light-y)) calc(6px * var(--blur)) rgb(var(--hilite)),
+      inset calc(2px * var(--pd)) calc(2px * var(--pd)) calc(2.5px * var(--pd)) rgb(var(--shade)),
+      inset calc(-2px * var(--pd)) calc(-2px * var(--pd)) calc(2.5px * var(--pd)) rgb(var(--well-hilite));
+    /* The well's two-tone edge, faded in by the press. */
+    --press-edge: linear-gradient(165deg,
+      rgb(var(--well-edge-a) / var(--p)) 50%, rgb(var(--well-edge-b) / var(--p)) 50%);
+    background:
+      linear-gradient(var(--raised-bg) 0 0) padding-box,
+      var(--press-edge) border-box,
+      var(--raised-bg);
+
+    /* Tilt: the side under the cursor moves away from the viewer. Goes on
+       the frame or only the face, per the Frame tilt option. */
+    --tilt-tf:
+      perspective(300px)
+      rotateY(calc(var(--tilt) * var(--tilt-gain) * var(--px) * var(--d) * (1 - var(--pf)) * var(--aspect)))
+      rotateX(calc(var(--tilt) * var(--tilt-gain) * var(--py) * var(--d) * (1 - var(--pf)) * -1))
+      scale(calc(1 - 0.012 * var(--a)));
+    transform: var(--tilt-tf);
+  }
+  .btn:hover { --d: 1; }
+  .btn:active { --p: 1; }
+  .btn:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 3px; }
+  /* Hover zone reaches 3px past the edge, so the dip starts just before
+     the cursor arrives (and the click target grows by as much). */
+  .btn::before { content: ''; position: absolute; inset: -4px; border-radius: inherit; }
+  .btn .face { display: flex; align-items: center; gap: inherit; }
+  .btn svg { width: 20px; height: 20px; flex: none; }
+
+  /* Frame tilt option: a button whose frame doesn't tilt keeps its casing
+     still and tips only its face (icon + label). */
+  .stage[data-frame="none"] .btn,
+  .stage[data-frame="raised"] .btn.well,
+  .stage[data-frame="sunk"] .btn:not(.well) { transform: none; }
+  .stage[data-frame="none"] .btn .face,
+  .stage[data-frame="raised"] .btn.well .face,
+  .stage[data-frame="sunk"] .btn:not(.well) .face { transform: var(--tilt-tf); }
+
+  /* ---- Sunk ----
+     Hover pushes it deeper by --sink, leaning toward the cursor: the inner
+     wall on the cursor side gets the bigger shadow. A press pushes it 50%
+     deeper still, and its face keeps tilting rather than flattening. */
+  .btn.well {
+    --tilt-gain: 2;
+    --pf: 0;
+    --wd: calc(var(--sunk-depth) * (1 + 0.5 * var(--p)));
+    --w-sx: calc(var(--wd) * (1 + var(--a) * (0.4 - 0.6 * var(--px))));
+    --w-sy: calc(var(--wd) * (1 + var(--a) * (0.4 - 0.6 * var(--py))));
+    --w-hx: calc(var(--wd) * (1 + var(--a) * (0.4 + 0.6 * var(--px))));
+    --w-hy: calc(var(--wd) * (1 + var(--a) * (0.4 + 0.6 * var(--py))));
+    --w-blur: calc(var(--wd) * (1 + var(--a) * 0.3));
+    border-width: 0.5px;  /* nav hairline */
+    color: var(--color-accent);
+    background: var(--well-bg);
+    box-shadow:
+      inset calc(2px * var(--w-sx)) calc(2px * var(--w-sy)) calc(2.5px * var(--w-blur)) rgb(var(--shade)),
+      inset calc(-2px * var(--w-hx)) calc(-2px * var(--w-hy)) calc(2.5px * var(--w-blur)) rgb(var(--well-hilite));
+  }
+  .btn.well svg { translate: 0 0.5px; }
+
+  /* ---- Light rim (experimental, panel toggle) ----
+     The dark-mode hairline ported to light: a near-white top edge that
+     dims when the cursor tips it away from the light, and a faint warm
+     bottom edge. A press fades it out in favour of the well's edge. */
+  .stage[data-rim="on"] .btn:not(.well) {
+    --lt-rim: calc(min(1, 0.85 * (1 + 0.4 * var(--a) * var(--py))) * (1 - var(--p)));
+    background:
+      linear-gradient(var(--raised-bg) 0 0) padding-box,
+      var(--press-edge) border-box,
+      linear-gradient(rgb(255 255 240 / var(--lt-rim)), rgb(255 255 240 / 0) 45%,
+        rgb(120 105 80 / calc(0.16 * (1 - var(--p))))) border-box
+      var(--raised-bg);
+  }
+
+  /* ---- Dark ----
+     Soft neumorphism doesn't read on a dark page (the highlight glows).
+     Raised: lift comes from three stacked black shadows (contact, key,
+     ambient) that shrink and lean away from the cursor on hover, and a
+     hairline that catches light at the top and fades out at the bottom.
+     A press drains those, grows the well's inset shadows and covers
+     face + rim with the page colour, ending at the sunk look.
+     Sunk: crisp top lip + soft inner shade at the top-left, and a lit
+     lower-right inner wall that grows on the side the cursor pushes down.
+     No outer highlight: on a page-coloured well it reads as a stray
+     border. */
+  .btn {
+    --ox: calc(-1px * var(--px) * var(--a) * var(--e));
+    --rim: calc(0.11 * (1 + 0.6 * var(--a) * var(--py)));
+    --dk-shadow:
+      calc(0.5 * var(--ox)) calc(1px * var(--dark-y)) calc(1px * var(--blur)) rgb(0 0 0 / 0.45),
+      calc(1.5 * var(--ox)) calc(3px * var(--dark-y)) calc(8px * var(--blur)) rgb(0 0 0 / 0.3),
+      calc(3 * var(--ox)) calc(8px * var(--dark-y)) calc(20px * var(--blur)) -4px rgb(0 0 0 / 0.28),
+      inset 0 calc(1px * var(--pd)) 0 rgb(0 0 0 / 0.55),
+      inset 0 calc(2px * var(--pd)) calc(5px * var(--pd)) rgb(0 0 0 / 0.35),
+      inset 0 calc(-1px * var(--pd)) calc(1.5px * var(--pd)) rgb(255 255 255 / calc(0.08 * var(--p)));
+    --dk-bg:
+      linear-gradient(rgb(28 26 22 / var(--p)) 0 0) border-box,  /* --color-bg, faded in by the press */
+      linear-gradient(#29261f, #221f1a) padding-box,
+      linear-gradient(rgb(255 255 255 / var(--rim)), rgb(255 255 255 / 0.03) 45%, rgb(0 0 0 / 0.25)) border-box
+      var(--raised-bg);
+  }
+  .btn.well {
+    --dk-shadow:
+      inset calc(-1px * var(--px) * var(--a) * var(--wd)) calc(1px * var(--w-sy)) 0 rgb(0 0 0 / 0.55),
+      inset calc(-2px * var(--px) * var(--a) * var(--wd)) calc(2px * var(--w-sy)) calc(5px * var(--w-blur)) rgb(0 0 0 / 0.35),
+      inset calc(-1px * (var(--w-hx) - var(--wd))) calc(-1px * var(--w-hy)) calc(1.5px * var(--w-blur)) rgb(255 255 255 / calc(0.08 * var(--w-hy)));
+    --dk-bg: var(--well-bg);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .stage .btn { background: var(--dk-bg); box-shadow: var(--dk-shadow); }
+  }
+  :root[data-theme="dark"] .stage .btn { background: var(--dk-bg); box-shadow: var(--dk-shadow); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .btn { --tilt: 0deg; }
+  }
+
+  /* ---- Panel ---- */
+  .panel { display: grid; gap: 1.25rem; font-size: 0.9rem; }
+  .row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+  .row > .name { min-width: 6.5rem; color: var(--color-muted); }
+  .seg {
+    font: inherit;
+    font-size: 0.85rem;
+    padding: 0.3rem 0.8rem;
+    border: 1px solid var(--color-line);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--color-text);
+    cursor: pointer;
+  }
+  .seg[aria-pressed="true"] {
+    background: var(--well-bg);
+    border-color: transparent;
+    box-shadow: var(--shadow-well);
+    color: var(--color-accent);
+  }
+  input[type="range"] { flex: 1; min-width: 8rem; accent-color: var(--color-accent); }
+  output, code { font: 0.8rem 'IBM Plex Mono', ui-monospace, monospace; }
+  output { min-width: 3.5rem; text-align: right; color: var(--color-muted); }
+  .note { color: var(--color-muted); font-size: 0.85rem; }
+  .note code { color: var(--color-text); }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-github" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5"/>
+  </symbol>
+</svg>
+
+<div class="wrap">
+  <header>
+    <h1>Neumorphism Prototype Lab</h1>
+    <p class="lede">The footer's GitHub button with the site's tokens, raised and sunk. Hover sinks it a little, mostly on the side under the cursor; pressing eases it into the sunk look (and pushes a sunk one deeper). The 3× copy is the same element zoomed, for inspecting the shadows.</p>
+  </header>
+
+  <section class="stage" id="stage" data-frame="raised" data-rim="off">
+    <h2>Button Styles</h2>
+    <div class="pair">
+      <a class="btn" href="#"><span class="face"><svg aria-hidden="true"><use href="#i-github"/></svg><span>GitHub</span></span></a>
+      <a class="btn well" href="#" aria-current="page"><span class="face"><svg aria-hidden="true"><use href="#i-github"/></svg><span>GitHub</span></span></a>
+    </div>
+    <p class="label">actual size · raised / sunk</p>
+    <div class="zoomed">
+      <div class="pair">
+        <a class="btn" href="#"><span class="face"><svg aria-hidden="true"><use href="#i-github"/></svg><span>GitHub</span></span></a>
+        <a class="btn well" href="#" aria-current="page"><span class="face"><svg aria-hidden="true"><use href="#i-github"/></svg><span>GitHub</span></span></a>
+      </div>
+    </div>
+    <p class="label">3× zoom · <output id="pos">px 0.00 · py 0.00</output></p>
+  </section>
+
+  <section class="panel" aria-label="Controls">
+    <div class="row" role="group" aria-label="Frame tilt">
+      <span class="name">Frame tilt</span>
+      <button class="seg" data-set="frame" value="both" aria-pressed="false">Both</button>
+      <button class="seg" data-set="frame" value="raised" aria-pressed="true">Raised only</button>
+      <button class="seg" data-set="frame" value="sunk" aria-pressed="false">Sunk only</button>
+      <button class="seg" data-set="frame" value="none" aria-pressed="false">None</button>
+    </div>
+    <div class="row" role="group" aria-label="Theme">
+      <span class="name">Theme</span>
+      <button class="seg" data-set="theme" value="auto" aria-pressed="true">Auto</button>
+      <button class="seg" data-set="theme" value="light" aria-pressed="false">Light</button>
+      <button class="seg" data-set="theme" value="dark" aria-pressed="false">Dark</button>
+    </div>
+    <div class="row" role="group" aria-label="Cursor JS">
+      <span class="name">Cursor JS</span>
+      <button class="seg" data-set="js" value="on" aria-pressed="true">On</button>
+      <button class="seg" data-set="js" value="off" aria-pressed="false">Off (CSS only)</button>
+    </div>
+    <div class="row" role="group" aria-label="Light rim">
+      <span class="name">Light rim</span>
+      <button class="seg" data-set="rim" value="on" aria-pressed="false">On</button>
+      <button class="seg" data-set="rim" value="off" aria-pressed="true">Off</button>
+    </div>
+    <label class="row"><span class="name">Raised depth</span>
+      <input type="range" min="0" max="200" step="5" value="40" data-var="--raised-depth" data-unit="%"><output>40%</output></label>
+    <label class="row"><span class="name">Sunk depth</span>
+      <input type="range" min="0" max="200" step="5" value="70" data-var="--sunk-depth" data-unit="%"><output>70%</output></label>
+    <label class="row"><span class="name">Sink amount</span>
+      <input type="range" min="0" max="100" step="5" value="100" data-var="--sink" data-unit="%"><output>100%</output></label>
+    <label class="row"><span class="name">Tilt</span>
+      <input type="range" min="0" max="20" step="0.25" value="10" data-var="--tilt" data-unit="deg"><output>10deg</output></label>
+    <p class="note"><code>:hover</code> sets <code>--d: 1</code> and <code>:active</code> sets <code>--p: 1</code> (pure CSS). A pointermove handler writes the cursor position as <code>--px</code>/<code>--py</code> in −1…1. Shadows and tilt are <code>calc()</code>s of those four numbers, registered with <code>@property</code> so they ease. Touch input is ignored, so phones get the plain sink.</p>
+  </section>
+</div>
+
+<script>
+  const stage = document.getElementById('stage');
+  const pos = document.getElementById('pos');
+  const btns = document.querySelectorAll('.btn');
+  let jsOn = true; // "Off" turns the handlers into no-ops: what a no-JS visitor gets
+
+  const set = (el, prop, v) => el.style.setProperty(prop, v);
+
+  for (const el of btns) {
+    el.addEventListener('click', (e) => e.preventDefault());
+    el.addEventListener('pointerenter', () => {
+      if (!jsOn) return;
+      const r = el.getBoundingClientRect();
+      set(el, '--aspect', (r.height / r.width).toFixed(3));
+    });
+    el.addEventListener('pointermove', (e) => {
+      if (!jsOn || e.pointerType !== 'mouse') return;
+      const r = el.getBoundingClientRect();
+      // Clamped, so the 3px hover zone outside the button reads as its edge.
+      const px = Math.max(-1, Math.min(1, ((e.clientX - r.left) / r.width) * 2 - 1));
+      const py = Math.max(-1, Math.min(1, ((e.clientY - r.top) / r.height) * 2 - 1));
+      set(el, '--px', px.toFixed(3));
+      set(el, '--py', py.toFixed(3));
+      pos.textContent = `px ${px.toFixed(2)} · py ${py.toFixed(2)}`;
+    });
+    el.addEventListener('pointerleave', () => {
+      set(el, '--px', 0);
+      set(el, '--py', 0);
+    });
+  }
+
+  // Segmented controls
+  const actions = {
+    frame: (v) => { stage.dataset.frame = v; },
+    rim: (v) => { stage.dataset.rim = v; },
+    theme: (v) => {
+      if (v === 'auto') document.documentElement.removeAttribute('data-theme');
+      else document.documentElement.dataset.theme = v;
+    },
+    js: (v) => {
+      jsOn = v === 'on';
+      if (jsOn) return;
+      for (const el of btns) for (const p of ['--px', '--py', '--aspect']) el.style.removeProperty(p);
+      pos.textContent = 'JS off';
+    },
+  };
+  for (const b of document.querySelectorAll('.seg')) {
+    b.addEventListener('click', () => {
+      for (const o of document.querySelectorAll(`.seg[data-set="${b.dataset.set}"]`)) {
+        o.setAttribute('aria-pressed', o === b);
+      }
+      actions[b.dataset.set](b.value);
+    });
+  }
+
+  // Sliders: percentages reach the CSS as 0–1 numbers.
+  for (const input of document.querySelectorAll('input[data-var]')) {
+    input.addEventListener('input', () => {
+      const { unit } = input.dataset;
+      const shown = input.value + unit;
+      const v = unit === '%' ? String(input.value / 100) : shown;
+      for (const el of btns) set(el, input.dataset.var, v);
+      input.nextElementSibling.textContent = shown;
+    });
+  }
+</script>
+</body>
+</html>
