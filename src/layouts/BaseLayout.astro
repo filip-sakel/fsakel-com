@@ -2,7 +2,9 @@
 import '@fontsource-variable/hanken-grotesk';
 import '../styles/tokens.css';
 import '../styles/base.css';
+import '../styles/neu.css';
 import vtSource from '../scripts/vt.js?raw';
+import neuSource from '../scripts/neu.js?raw';
 import hankenLatin from '@fontsource-variable/hanken-grotesk/files/hanken-grotesk-latin-wght-normal.woff2?url';
 
 import { Icon } from 'astro-icon/components';
@@ -16,11 +18,12 @@ interface Props {
 const { title, description = site.description } = Astro.props;
 const fullTitle = title ? `${title} · ${site.name}` : site.name;
 const canonical = new URL(Astro.url.pathname, Astro.site);
-// Inlined (not /vt.js) so the page never waits on a script request. Its
+// Inlined (not /vt.js) so the page never waits on a script request. vt.js's
 // `pagereveal` listener must exist before the first render, so it can't be
-// deferred. Whole-line comments are stripped; the CSP allows it by hash
-// (deploy/Caddyfile), which `pnpm check` verifies.
-const vt = vtSource.replace(/^\s*\/\/.*\n/gm, '').trim();
+// deferred; neu.js rides along in the same tag. Whole-line comments are
+// stripped; the CSP allows the result by hash (deploy/Caddyfile), which
+// `pnpm check` verifies.
+const inlineJs = [vtSource, neuSource].map((s) => s.replace(/^\s*\/\/.*\n/gm, '').trim()).join('\n');
 ---
 
 <!doctype html>
@@ -42,7 +45,7 @@ const vt = vtSource.replace(/^\s*\/\/.*\n/gm, '').trim();
     <meta property="og:url" content={canonical} />
     <!-- Optional enhancement: page-slide direction follows the nav order. -->
     <meta name="nav-order" content={nav.map((n) => n.href).join(' ')} />
-    <script is:inline set:html={vt} />
+    <script is:inline set:html={inlineJs} />
     <slot name="head" />
   </head>
   <body>
@@ -57,9 +60,11 @@ const vt = vtSource.replace(/^\s*\/\/.*\n/gm, '').trim();
         {
           social.map((s) => (
             <li>
-              <a href={s.href} rel="me noopener">
-                <Icon name={s.icon} size={20} aria-hidden="true" />
-                <span>{s.label}</span>
+              <a class="neu" href={s.href} rel="me noopener">
+                <span class="neu-face">
+                  <Icon name={s.icon} size={20} aria-hidden="true" />
+                  <span>{s.label}</span>
+                </span>
               </a>
             </li>
           ))
@@ -98,25 +103,10 @@ const vt = vtSource.replace(/^\s*\/\/.*\n/gm, '').trim();
       gap: 0.5em;
       min-height: 2.75rem;
       padding: 0 var(--space-m) 0 var(--space-s);
-      border: 1px solid var(--raised-border);
+      /* Raised button (src/styles/neu.css). */
+      border: 1px solid transparent;
       border-radius: 0.8rem;
-      background: var(--raised-bg);
-      box-shadow: var(--shadow-raised);
       text-decoration: none;
-      transition:
-        background-color 0.15s,
-        box-shadow 0.15s;
-
-      &:hover {
-        background: var(--raised-bg-hover);
-      }
-
-      /* Same sunken well as a pressed nav item. */
-      &:active {
-        background: var(--well-bg);
-        border-color: transparent;
-        box-shadow: var(--shadow-well);
-      }
     }
   }
 

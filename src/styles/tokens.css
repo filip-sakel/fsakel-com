@@ -7,7 +7,6 @@
     /* Color (light) */
     --color-bg: #efe5d1;
     --color-surface: #f6efdc;
-    --color-surface-hover: #fbf6e8;
     --color-text: #1f1d1a;
     --color-muted: #625e56;
     /* Darkened from the mockup's #c0714a to pass WCAG AA (≥4.5:1) as text. */
@@ -19,7 +18,7 @@
     --color-well-top: #e9dfc3;
     --color-well-bottom: #f4edda;
     --color-well-edge: #b8ad94;
-    /* Outline of popovers (and, in dark mode, raised controls). */
+    /* Outline of popovers. */
     --color-raised-edge: #b8ad94;
     /* Sunken well (selected nav item, pressed/open controls): flat fill
        inside a hairline that is shade on the top-left half and light on
@@ -27,7 +26,7 @@
        `border-color: transparent`. */
     --well-bg:
       linear-gradient(#f0e5d1 0 0) padding-box,
-      linear-gradient(165deg, #b2ac9d 50%, #e0d7c4 50%) border-box;
+      linear-gradient(165deg, #cec2a5 50%, #e0d7c4 50%) border-box;
     --color-photo-stroke: rgb(0 0 0 / 0.55);
 
     /* Type */
@@ -57,21 +56,25 @@
     --radius-s: 0.5rem;
     --radius-photo: 1.5rem;
     --shadow-photo: 0 0.6rem 1.4rem -0.4rem rgb(60 40 20 / 0.35);
-    /* Sunken "pressed" well (selected nav item, open skill). */
-    /* Light from the top-left: shade inside the top-left edge, warm white
-       inside the bottom-right. */
-    --shadow-well: inset 2px 2px 2.5px #cbc3b2, inset -2px -2px 2.5px #fffff0;
-    --shadow-well-sm: var(--shadow-well);
-    /* Raised (neumorphic) buttons: same fill as the page, lifted by a
-       shade to the bottom-right and a highlight to the top-left (the well's
-       colors, outside instead of inset). */
+    /* Neumorphic buttons (src/styles/neu.css). Light from the top-left:
+       raised casts --shade to the bottom-right and --hilite to the
+       top-left; a sunk well has them inset. Channels only, so the shadows
+       can compute their alpha. Light mode only; dark uses black/white. */
     --raised-bg: var(--color-bg);
-    --raised-bg-hover: #f3ebda;
-    --raised-border: transparent;
-    --shadow-raised: 3px 3px 6px #cbc3b2, -3px -3px 6px #fffff0;
+    --shade: 203 195 178; /* #cbc3b2 */
+    --hilite: 255 255 240; /* #fffff0 */
+    --well-hilite: 252 250 234; /* #fcfaea: --hilite nudged toward the bg */
+    --well-edge-a: 206 194 165; /* #cec2a5: --well-bg edge, dark half */
+    --well-edge-b: 224 215 196; /* #e0d7c4: --well-bg edge, light half */
     --shadow-pop: 0 0.5rem 1.5rem -0.5rem rgb(60 40 20 / 0.35);
 
     --nav-h: 3.75rem;
+
+    /* Page grain: an SVG noise tile (feTurbulence), contrast-boosted by
+       feColorMatrix inside the SVG, so no CSS filter. Pair with
+       `background-blend-mode: overlay` over --color-bg: overlay lightens
+       and darkens around mid-gray, so the average color stays the same. */
+    --grain: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='2 0 0 0 -.5 2 0 0 0 -.5 2 0 0 0 -.5 0 0 0 0 .3'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
   }
 
   /* Dark: warm charcoal with the same hues. Light mode is the default above. */
@@ -79,7 +82,6 @@
     :root {
       --color-bg: #1c1a16;
       --color-surface: #25221d;
-      --color-surface-hover: #2d2923;
       --color-text: #ede5d0;
       --color-muted: #a9a194;
       --color-accent: #e3895c;
@@ -87,8 +89,9 @@
       --color-marker: #e57b9a;
       --color-rail: #4d473d;
       --color-line: #36322a;
-      /* Dark wells: depth from lightness, not blur. A flat recess a step
-         darker than the page; the edge matches it so no outline shows. */
+      /* Dark wells (photo placeholders): depth from lightness, not blur. A
+         flat recess a step darker than the page; the edge matches it so no
+         outline shows. Sunk buttons use the page color instead (neu.css). */
       --color-well-top: #171511;
       --color-well-bottom: #171511;
       --color-well-edge: #171511;
@@ -99,17 +102,9 @@
       --color-photo-stroke: rgb(255 255 255 / 0.14);
 
       --shadow-photo: 0 0.6rem 1.4rem -0.4rem rgb(0 0 0 / 0.6);
-      /* Light from above: a crisp dark lip inside the top edge, and the
-         lower rim catching light just outside the bottom edge. */
-      --shadow-well: inset 0 1px 0 rgb(0 0 0 / 0.55), 0 1px 0 rgb(255 255 255 / 0.07);
-      --shadow-well-sm: inset 0 1px 0 rgb(0 0 0 / 0.5), 0 1px 0 rgb(255 255 255 / 0.06);
-      /* Raised: lit top edge, short dark shadow below. */
-      --shadow-raised: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 1px 2px rgb(0 0 0 / 0.5);
-      /* Dark keeps a lighter surface with an edge: soft outer shadows
+      /* Dark raised buttons keep a lighter surface: soft outer shadows
          vanish on a near-black page. */
       --raised-bg: var(--color-surface);
-      --raised-bg-hover: var(--color-surface-hover);
-      --raised-border: var(--color-raised-edge);
       --shadow-pop: 0 0.5rem 1.5rem -0.5rem rgb(0 0 0 / 0.7);
     }
   }

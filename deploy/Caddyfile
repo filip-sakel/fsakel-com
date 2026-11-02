@@ -11,13 +11,13 @@
 	root * /srv
 	encode zstd gzip
 
-	# script-src 'sha256-…': the SHA-256 of the one inline script, the
-	# contents of src/scripts/vt.js as BaseLayout.astro inlines it (whole-line
+	# script-src 'sha256-…': the SHA-256 of the one inline script:
+	# src/scripts/vt.js + neu.js as BaseLayout.astro inlines them (whole-line
 	# comments stripped). Only a script with exactly those bytes may run inline.
-	# After editing vt.js, `pnpm check` fails and prints the new hash to paste
+	# After editing either, `pnpm check` fails and prints the new hash to paste
 	# here.
 	header {
-		Content-Security-Policy "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self' 'sha256-m8dL1UhfGrAllwv2xK5Pl3S+QZu/pLFOzta2aNRvp5I='; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'"
+		Content-Security-Policy "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self' 'sha256-dsKHEwOgCZFFUgCeh4fMiKlrSSbDoQm8QcAMZh1aLLc='; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'"
 		Referrer-Policy strict-origin-when-cross-origin
 		X-Content-Type-Options nosniff
 		Permissions-Policy "camera=(), microphone=(), geolocation=()"

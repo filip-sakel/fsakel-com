@@ -1,0 +1,182 @@
+/* Neumorphic buttons, ported from design/prototypes/neumorphism-lab.html
+   with the lab's defaults (frame tilt: raised only; light rim: off).
+
+   Markup: <a class="neu"><span class="neu-face">icon + label</span></a>
+     .neu         raised: lifted off the page
+     .neu-flat    flat until pressed (the nav's unselected items)
+     sunk         a .neu with aria-current="page", or a popover trigger whose
+                  popover is open (the nav's selected item, an open skill)
+   Hover sinks it, mostly on the side under the cursor; a press eases a
+   raised one into the sunk look and pushes a sunk one deeper. Components
+   set only size, shape, border width and color.
+
+   Every shadow and transform is a calc() of four numbers, registered so
+   `transition` can ease them:
+     --d   0 → 1 on :hover
+     --p   0 → 1 on :active
+     --px  cursor x within the button, −1 … 1 (src/scripts/neu.js)
+     --py  cursor y within the button, −1 … 1
+   Without the script (JS off, or touch) --px/--py stay 0: hover still
+   sinks and press still sinks into the well, just evenly and untilted. */
+
+@property --d { syntax: '<number>'; inherits: true; initial-value: 0; }
+@property --p { syntax: '<number>'; inherits: true; initial-value: 0; }
+@property --px { syntax: '<number>'; inherits: true; initial-value: 0; }
+@property --py { syntax: '<number>'; inherits: true; initial-value: 0; }
+
+@layer components {
+  .neu {
+    /* Knobs */
+    --raised-depth: 0.4; /* resting lift */
+    --sunk-depth: 0.7; /* depth of sunk, and of a pressed raised */
+    --sink: 1; /* how far hover pushes it down, 0–1 */
+    --tilt: 10deg; /* max tilt toward the cursor */
+    --tilt-gain: 1; /* per-style multiplier on --tilt */
+    --aspect: 0.4; /* ≈ height / width, so both axes tilt equally */
+
+    position: relative;
+    cursor: pointer;
+    transition:
+      --px 0.12s ease-out,
+      --py 0.12s ease-out,
+      --d 0.22s ease-out,
+      --p 0.15s ease-out,
+      color 0.2s;
+
+    /* Derived */
+    --cx: clamp(-1, var(--px), 1); /* the hover zone past the edge reads as the edge */
+    --cy: clamp(-1, var(--py), 1);
+    --a: calc(var(--d) * var(--sink)); /* hover sink amount */
+    --e: calc(var(--raised-depth) * (1 - var(--p))); /* lift left after the press */
+    --pd: calc(var(--sunk-depth) * var(--p)); /* well depth the press adds */
+    --pf: var(--p); /* how much the press flattens the tilt */
+    /* Per-side shadow scales. On hover 40% of the sink is even and 60%
+       leans toward the cursor: the shadow under it collapses, the far
+       side's holds, as if the button tipped. */
+    --dark-x: calc(var(--e) * max(0, 1 - var(--a) * (0.4 + 0.6 * var(--cx))));
+    --dark-y: calc(var(--e) * max(0, 1 - var(--a) * (0.4 + 0.6 * var(--cy))));
+    --light-x: calc(var(--e) * max(0, 1 - var(--a) * (0.4 - 0.6 * var(--cx))));
+    --light-y: calc(var(--e) * max(0, 1 - var(--a) * (0.4 - 0.6 * var(--cy))));
+    --blur: calc(var(--e) * max(0.35, 1 - var(--a) * 0.45));
+
+    /* Light: outer pair = raised, inset pair = the well, traded by --p.
+       The well's two-tone edge fades in with the press. */
+    --press-edge: linear-gradient(165deg, rgb(var(--well-edge-a) / var(--p)) 50%, rgb(var(--well-edge-b) / var(--p)) 50%);
+    --lt-shadow:
+      calc(3px * var(--dark-x)) calc(3px * var(--dark-y)) calc(6px * var(--blur)) rgb(var(--shade)),
+      calc(-3px * var(--light-x)) calc(-3px * var(--light-y)) calc(6px * var(--blur)) rgb(var(--hilite)),
+      inset calc(2px * var(--pd)) calc(2px * var(--pd)) calc(2.5px * var(--pd)) rgb(var(--shade)),
+      inset calc(-2px * var(--pd)) calc(-2px * var(--pd)) calc(2.5px * var(--pd)) rgb(var(--well-hilite));
+    --lt-bg: linear-gradient(var(--raised-bg) 0 0) padding-box, var(--press-edge) border-box, var(--raised-bg);
+
+    /* Dark: soft neumorphism doesn't read on a dark page (the highlight
+       glows). Lift comes from three stacked black shadows (contact, key,
+       ambient) that shrink and lean away from the cursor on hover, and a
+       hairline that catches light at the top and fades out at the bottom.
+       A press drains those, grows the well's inset shadows and covers
+       face + rim with the page color, ending at the sunk look. */
+    --ox: calc(-1px * var(--cx) * var(--a) * var(--e));
+    --rim: calc(0.11 * (1 + 0.6 * var(--a) * var(--cy)));
+    --dk-shadow:
+      calc(0.5 * var(--ox)) calc(1px * var(--dark-y)) calc(1px * var(--blur)) rgb(0 0 0 / 0.45),
+      calc(1.5 * var(--ox)) calc(3px * var(--dark-y)) calc(8px * var(--blur)) rgb(0 0 0 / 0.3),
+      calc(3 * var(--ox)) calc(8px * var(--dark-y)) calc(20px * var(--blur)) -4px rgb(0 0 0 / 0.28),
+      inset calc(1px * var(--pd)) calc(1px * var(--pd)) 0 rgb(0 0 0 / 0.55),
+      inset calc(2px * var(--pd)) calc(2px * var(--pd)) calc(5px * var(--pd)) rgb(0 0 0 / 0.35),
+      inset calc(-1px * var(--pd)) calc(-1px * var(--pd)) calc(1px * var(--pd)) rgb(255 255 255 / calc(0.22 * var(--pd)));
+    --dk-bg:
+      linear-gradient(rgb(28 26 22 / var(--p)) 0 0) border-box, /* --color-bg, faded in by the press */
+      linear-gradient(#29261f, #221f1a) padding-box,
+      linear-gradient(rgb(255 255 255 / var(--rim)), rgb(255 255 255 / 0.03) 45%, rgb(0 0 0 / 0.25)) border-box
+      var(--raised-bg);
+
+    background: var(--lt-bg);
+    box-shadow: var(--lt-shadow);
+
+    /* Tilt: the side under the cursor moves away from the viewer. */
+    --tilt-tf:
+      perspective(300px)
+      rotateY(calc(var(--tilt) * var(--tilt-gain) * var(--cx) * var(--d) * (1 - var(--pf)) * var(--aspect)))
+      rotateX(calc(var(--tilt) * var(--tilt-gain) * var(--cy) * var(--d) * (1 - var(--pf)) * -1))
+      scale(calc(1 - 0.012 * var(--a)));
+    transform: var(--tilt-tf);
+
+    &:hover {
+      --d: 1;
+    }
+    &:active {
+      --p: 1;
+    }
+    /* Hover zone reaches 3px past the edge, so the dip starts just before
+       the cursor arrives (and the click target grows by as much). */
+    &::before {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: inherit;
+    }
+  }
+
+  .neu-face {
+    display: flex;
+    align-items: center;
+    gap: inherit;
+  }
+
+  /* Flat items fill with the page itself, grain included, so at rest they
+     blend into it. (Transparent won't do: the light press edge is a
+     border-box layer that would then show across the whole face.) */
+  .neu-flat {
+    --raised-depth: 0;
+    --lt-bg: var(--grain) padding-box, linear-gradient(var(--color-bg) 0 0) padding-box, var(--press-edge) border-box;
+    --dk-bg: var(--grain), var(--color-bg);
+    background-blend-mode: overlay, normal;
+  }
+
+  /* Sunk: hover pushes it deeper by --sink, leaning toward the cursor (the
+     inner wall on the cursor side gets the bigger shadow). A press pushes
+     it 50% deeper still. Its frame is the casing and stays still; only
+     the face tilts, twice as far, and keeps tilting while pressed. */
+  .neu:is([aria-current='page'], :has(+ :popover-open)) {
+    --tilt-gain: 2;
+    --pf: 0;
+    --wd: calc(var(--sunk-depth) * (1 + 0.5 * var(--p)));
+    --w-sx: calc(var(--wd) * (1 + var(--a) * (0.4 - 0.6 * var(--cx))));
+    --w-sy: calc(var(--wd) * (1 + var(--a) * (0.4 - 0.6 * var(--cy))));
+    --w-hx: calc(var(--wd) * (1 + var(--a) * (0.4 + 0.6 * var(--cx))));
+    --w-hy: calc(var(--wd) * (1 + var(--a) * (0.4 + 0.6 * var(--cy))));
+    --w-blur: calc(var(--wd) * (1 + var(--a) * 0.3));
+    --lt-shadow:
+      inset calc(2px * var(--w-sx)) calc(2px * var(--w-sy)) calc(2.5px * var(--w-blur)) rgb(var(--shade)),
+      inset calc(-2px * var(--w-hx)) calc(-2px * var(--w-hy)) calc(2.5px * var(--w-blur)) rgb(var(--well-hilite));
+    --lt-bg: var(--well-bg);
+    /* Dark: lit from the top-left like light mode. A crisp lip + soft
+       shade inside the top and left edges, a lit inner wall at the bottom
+       and right; hover leans them like the light ones. No outer
+       highlight: on a page-colored well it reads as a stray border. */
+    --dk-shadow:
+      inset calc(1px * var(--w-sx)) calc(1px * var(--w-sy)) 0 rgb(0 0 0 / 0.55),
+      inset calc(2px * var(--w-sx)) calc(2px * var(--w-sy)) calc(5px * var(--w-blur)) rgb(0 0 0 / 0.35),
+      inset calc(-1px * var(--w-hx)) calc(-1px * var(--w-hy)) calc(1px * var(--w-blur)) rgb(255 255 255 / calc(0.11 * (var(--w-hx) + var(--w-hy))));
+    --dk-bg: var(--color-bg);
+    background-blend-mode: normal; /* undo .neu-flat's grain blend */
+    transform: none;
+
+    & > .neu-face {
+      transform: var(--tilt-tf);
+    }
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .neu {
+      background: var(--dk-bg);
+      box-shadow: var(--dk-shadow);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .neu {
+      --tilt: 0deg;
+    }
+  }
+}

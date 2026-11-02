@@ -230,10 +230,10 @@
      hairline that catches light at the top and fades out at the bottom.
      A press drains those, grows the well's inset shadows and covers
      face + rim with the page colour, ending at the sunk look.
-     Sunk: crisp top lip + soft inner shade at the top-left, and a lit
-     lower-right inner wall that grows on the side the cursor pushes down.
-     No outer highlight: on a page-coloured well it reads as a stray
-     border. */
+     Sunk: lit from the top-left like light mode. A crisp lip + soft
+     shade inside the top and left edges, a lit inner wall at the bottom
+     and right; hover leans them like the light ones. No outer highlight:
+     on a page-coloured well it reads as a stray border. */
   .btn {
     --ox: calc(-1px * var(--px) * var(--a) * var(--e));
     --rim: calc(0.11 * (1 + 0.6 * var(--a) * var(--py)));
@@ -241,9 +241,9 @@
       calc(0.5 * var(--ox)) calc(1px * var(--dark-y)) calc(1px * var(--blur)) rgb(0 0 0 / 0.45),
       calc(1.5 * var(--ox)) calc(3px * var(--dark-y)) calc(8px * var(--blur)) rgb(0 0 0 / 0.3),
       calc(3 * var(--ox)) calc(8px * var(--dark-y)) calc(20px * var(--blur)) -4px rgb(0 0 0 / 0.28),
-      inset 0 calc(1px * var(--pd)) 0 rgb(0 0 0 / 0.55),
-      inset 0 calc(2px * var(--pd)) calc(5px * var(--pd)) rgb(0 0 0 / 0.35),
-      inset 0 calc(-1px * var(--pd)) calc(1.5px * var(--pd)) rgb(255 255 255 / calc(0.08 * var(--p)));
+      inset calc(1px * var(--pd)) calc(1px * var(--pd)) 0 rgb(0 0 0 / 0.55),
+      inset calc(2px * var(--pd)) calc(2px * var(--pd)) calc(5px * var(--pd)) rgb(0 0 0 / 0.35),
+      inset calc(-1px * var(--pd)) calc(-1px * var(--pd)) calc(1px * var(--pd)) rgb(255 255 255 / calc(0.22 * var(--pd)));
     --dk-bg:
       linear-gradient(rgb(28 26 22 / var(--p)) 0 0) border-box,  /* --color-bg, faded in by the press */
       linear-gradient(#29261f, #221f1a) padding-box,
@@ -252,10 +252,19 @@
   }
   .btn.well {
     --dk-shadow:
-      inset calc(-1px * var(--px) * var(--a) * var(--wd)) calc(1px * var(--w-sy)) 0 rgb(0 0 0 / 0.55),
-      inset calc(-2px * var(--px) * var(--a) * var(--wd)) calc(2px * var(--w-sy)) calc(5px * var(--w-blur)) rgb(0 0 0 / 0.35),
-      inset calc(-1px * (var(--w-hx) - var(--wd))) calc(-1px * var(--w-hy)) calc(1.5px * var(--w-blur)) rgb(255 255 255 / calc(0.08 * var(--w-hy)));
+      inset calc(1px * var(--w-sx)) calc(1px * var(--w-sy)) 0 rgb(0 0 0 / 0.55),
+      inset calc(2px * var(--w-sx)) calc(2px * var(--w-sy)) calc(5px * var(--w-blur)) rgb(0 0 0 / 0.35),
+      inset calc(-1px * var(--w-hx)) calc(-1px * var(--w-hy)) calc(1px * var(--w-blur)) rgb(255 255 255 / calc(0.11 * (var(--w-hx) + var(--w-hy))));
     --dk-bg: var(--well-bg);
+  }
+  /* Sunk rim (dark only, panel toggle): a hairline a touch brighter than
+     the page on the top-left edge, outlining the shade under it. Fades
+     out toward the bottom-right, where the lit wall takes over. */
+  .stage[data-wrim="on"] .btn.well {
+    --dk-bg:
+      linear-gradient(var(--well-bg) 0 0) padding-box,
+      linear-gradient(135deg, rgb(255 255 255 / 0.09), rgb(255 255 255 / 0) 50%) border-box
+      var(--well-bg);
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) .stage .btn { background: var(--dk-bg); box-shadow: var(--dk-shadow); }
@@ -306,7 +315,7 @@
     <p class="lede">The footer's GitHub button with the site's tokens, raised and sunk. Hover sinks it a little, mostly on the side under the cursor; pressing eases it into the sunk look (and pushes a sunk one deeper). The 3× copy is the same element zoomed, for inspecting the shadows.</p>
   </header>
 
-  <section class="stage" id="stage" data-frame="raised" data-rim="off">
+  <section class="stage" id="stage" data-frame="raised" data-rim="off" data-wrim="off">
     <h2>Button Styles</h2>
     <div class="pair">
       <a class="btn" href="#"><span class="face"><svg aria-hidden="true"><use href="#i-github"/></svg><span>GitHub</span></span></a>
@@ -345,6 +354,11 @@
       <span class="name">Light rim</span>
       <button class="seg" data-set="rim" value="on" aria-pressed="false">On</button>
       <button class="seg" data-set="rim" value="off" aria-pressed="true">Off</button>
+    </div>
+    <div class="row" role="group" aria-label="Sunk rim (dark)">
+      <span class="name">Sunk rim (dark)</span>
+      <button class="seg" data-set="wrim" value="on" aria-pressed="false">On</button>
+      <button class="seg" data-set="wrim" value="off" aria-pressed="true">Off</button>
     </div>
     <label class="row"><span class="name">Raised depth</span>
       <input type="range" min="0" max="200" step="5" value="40" data-var="--raised-depth" data-unit="%"><output>40%</output></label>
@@ -393,6 +407,7 @@
   const actions = {
     frame: (v) => { stage.dataset.frame = v; },
     rim: (v) => { stage.dataset.rim = v; },
+    wrim: (v) => { stage.dataset.wrim = v; },
     theme: (v) => {
       if (v === 'auto') document.documentElement.removeAttribute('data-theme');
       else document.documentElement.dataset.theme = v;

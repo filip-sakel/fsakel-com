@@ -12,9 +12,11 @@ const isCurrent = (href: string) => (href === '/' ? path === '/' : path.startsWi
       {
         nav.map((item) => (
           <li>
-            <a href={item.href} aria-current={isCurrent(item.href) ? 'page' : undefined}>
-              <Icon name={item.icon} size={18} aria-hidden="true" />
-              <span>{item.label}</span>
+            <a class="neu neu-flat" href={item.href} aria-current={isCurrent(item.href) ? 'page' : undefined}>
+              <span class="neu-face">
+                <Icon name={item.icon} size={18} aria-hidden="true" />
+                <span class="label">{item.label}</span>
+              </span>
             </a>
           </li>
         ))
@@ -34,7 +36,8 @@ const isCurrent = (href: string) => (href === '/' ? path === '/' : path.startsWi
     padding-inline: var(--space-xs);
     /* Solid behind the whole button row, then a soft fade below it, so
        scrolled content never shows through the buttons. */
-    background: var(--color-bg);
+    background: var(--grain), var(--color-bg);
+    background-blend-mode: overlay;
     view-transition-name: site-nav;
 
     &::after {
@@ -42,7 +45,9 @@ const isCurrent = (href: string) => (href === '/' ? path === '/' : path.startsWi
       position: absolute;
       inset: 100% 0 auto;
       height: var(--space-m);
-      background: linear-gradient(var(--color-bg), transparent);
+      background: var(--grain), var(--color-bg);
+      background-blend-mode: overlay;
+      mask-image: linear-gradient(#000, transparent);
       pointer-events: none;
     }
   }
@@ -59,7 +64,8 @@ const isCurrent = (href: string) => (href === '/' ? path === '/' : path.startsWi
     /* 36px: above WCAG 2.2's 24px target minimum, slimmer than before. */
     min-height: 2.25rem;
     padding: 0 clamp(0.55rem, 2.2vw, 1.05rem);
-    /* Hairline, as in the design; only visible on the selected well. */
+    /* Flat until pressed, sunk when selected (src/styles/neu.css). The
+       hairline is the well's edge, as in the design. */
     border: 0.5px solid transparent;
     border-radius: 0.8rem;
     color: var(--color-muted);
@@ -67,22 +73,16 @@ const isCurrent = (href: string) => (href === '/' ? path === '/' : path.startsWi
     text-decoration: none;
     /* iOS otherwise flashes a gray rectangle over the button on tap. */
     -webkit-tap-highlight-color: transparent;
-    transition:
-      color 0.2s,
-      box-shadow 0.15s,
-      background-color 0.15s;
 
     &:hover {
       color: var(--color-text);
     }
 
-    /* Pressing any item sinks it, previewing the selected state. */
+    /* Pressing any item eases it into the well, previewing the selected
+       state. */
     &:active,
     &[aria-current='page'] {
       color: var(--color-accent);
-      background: var(--well-bg);
-      border-color: transparent;
-      box-shadow: var(--shadow-well);
     }
 
     &[aria-current='page'] :global(svg) {
@@ -91,15 +91,103 @@ const isCurrent = (href: string) => (href === '/' ? path === '/' : path.startsWi
     }
   }
 
-  /* src/scripts/vt.js moves the selection on click; switch it instantly so
-     the page-transition snapshot shows the settled state. */
-  .site-nav[data-navigating] a {
-    transition: none;
+  /* src/scripts/vt.js holds a clicked item pressed until the next page
+     shows, and there marks the item we came from with data-was. */
+  a[data-held] {
+    --p: 1;
   }
 
-  /* Very narrow phones: icons go before labels shrink further. */
-  @media (width < 400px) {
-    a :global(svg) {
+  /* Phones: icons only, plus the selected item's label. Each item gets an
+     equal, fixed slot and stays centered in it, so moving the selection
+     never shifts the others; the selected well just grows into the slack
+     around its icon. Collapsed labels are zero-width, not removed, so every
+     link keeps its accessible name. */
+  @media (width < 30rem) {
+    .site-nav,
+    ul {
+      width: 100%;
+    }
+
+    ul {
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: minmax(0, 1fr);
+      gap: 0;
+    }
+
+    li {
+      display: flex;
+      justify-content: center;
+    }
+
+    a {
+      flex: none;
+      justify-content: center;
+      gap: 0;
+      min-width: 2.75rem;
+      padding-inline: 0.5rem;
+      white-space: nowrap;
+    }
+
+    .label {
+      overflow: hidden;
+      padding-inline-start: 0.4em;
+    }
+
+    a:not([aria-current='page']) .label {
+      width: 0;
+      padding-inline-start: 0;
+      opacity: 0;
+    }
+  }
+
+  /* Arriving from another nav page: the selection animates over. The old
+     item's well eases out and, on phones, its width collapses back to the
+     icon while the new item's label grows out of its well. (The nav's own
+     page-transition crossfade is off, base.css, so this is what shows.) */
+  @media (prefers-reduced-motion: no-preference) {
+    .site-nav {
+      interpolate-size: allow-keywords;
+    }
+
+    a[data-was] {
+      animation: nav-unpress 0.3s ease-out;
+    }
+
+    @media (width < 30rem) {
+      a[data-was] .label {
+        animation: nav-label-out 0.3s cubic-bezier(0.2, 0, 0, 1);
+      }
+      .site-nav:has([data-was]) [aria-current='page'] .label {
+        animation: nav-label-in 0.3s cubic-bezier(0.2, 0, 0, 1);
+      }
+    }
+  }
+
+  @keyframes nav-unpress {
+    from {
+      --p: 1;
+    }
+  }
+  @keyframes nav-label-in {
+    from {
+      width: 0;
+      padding-inline-start: 0;
+      opacity: 0;
+    }
+  }
+  @keyframes nav-label-out {
+    from {
+      width: auto;
+      padding-inline-start: 0.4em;
+      opacity: 1;
+    }
+  }
+
+  /* Smallest phones: icon + label outgrows its slot, so the selected item
+     shows just its label. */
+  @media (width < 22rem) {
+    a[aria-current='page'] :global(svg) {
       display: none;
     }
   }

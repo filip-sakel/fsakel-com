@@ -23,9 +23,11 @@ const uses = await getSkillUses();
               if (where.length === 0) return <li class="skill">{skill}</li>;
               return (
                 <li class="has-uses" id={skillId(skill)}>
-                  <button class="skill" type="button" popovertarget={`${skillId(skill)}-uses`}>
-                    {skill}
-                    <span class="count" aria-hidden="true">{where.length}</span>
+                  <button class="skill neu" type="button" popovertarget={`${skillId(skill)}-uses`}>
+                    <span class="neu-face">
+                      {skill}
+                      <span class="count" aria-hidden="true">{where.length}</span>
+                    </span>
                     <span class="visually-hidden">, used in {where.length} {where.length === 1 ? 'place' : 'places'}</span>
                   </button>
                   <div class="pop" id={`${skillId(skill)}-uses`} popover>
@@ -89,26 +91,11 @@ const uses = await getSkillUses();
     font-size: var(--step--1);
   }
 
+  /* Raised button, sunk while its popover is open (src/styles/neu.css). */
   button.skill {
-    border-color: var(--raised-border);
-    background: var(--raised-bg);
+    border-color: transparent;
     color: var(--color-text);
-    cursor: pointer;
-    box-shadow: var(--shadow-raised);
-    transition: box-shadow 0.15s, background-color 0.15s;
     anchor-name: --skill;
-
-    &:hover {
-      background: var(--raised-bg-hover);
-    }
-
-    /* Same sunken "pressed" well as the nav. */
-    &:active,
-    &:has(+ .pop:popover-open) {
-      background: var(--well-bg);
-      border-color: transparent;
-      box-shadow: var(--shadow-well-sm);
-    }
   }
 
   .count {
