@@ -65,6 +65,8 @@ const isCurrent = (href: string) => (href === '/' ? path === '/' : path.startsWi
     color: var(--color-muted);
     font-size: clamp(0.875rem, 0.8rem + 0.4vw, 1rem);
     text-decoration: none;
+    /* iOS otherwise flashes a gray rectangle over the button on tap. */
+    -webkit-tap-highlight-color: transparent;
     transition:
       color 0.2s,
       box-shadow 0.15s,
