@@ -1,0 +1,195 @@
+@layer reset {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+  * {
+    margin: 0;
+  }
+  img,
+  svg {
+    display: block;
+    max-width: 100%;
+  }
+  img {
+    height: auto;
+  }
+  ul[role='list'],
+  ol[role='list'] {
+    list-style: none;
+    padding: 0;
+  }
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: none;
+    text-size-adjust: none;
+    scroll-padding-top: calc(var(--nav-h) + var(--space-m));
+    background: var(--color-bg);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+
+  body {
+    min-height: 100svh;
+    font-family: var(--font-sans);
+    font-size: var(--step-0);
+    line-height: 1.5;
+    color: var(--color-text);
+    background: var(--color-bg);
+    overflow-x: clip;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-weight: 500;
+    line-height: 1.15;
+    text-wrap: balance;
+  }
+
+  p,
+  li {
+    text-wrap: pretty;
+  }
+
+  a {
+    color: inherit;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .skip-link {
+    position: absolute;
+    left: var(--space-s);
+    top: var(--space-s);
+    z-index: 100;
+    padding: var(--space-xs) var(--space-s);
+    background: var(--color-surface);
+    border-radius: var(--radius-s);
+    translate: 0 -200%;
+
+    &:focus-visible {
+      translate: 0 0;
+    }
+  }
+
+  .wrap {
+    width: min(100% - 2 * var(--gutter), var(--wide-max));
+    margin-inline: auto;
+  }
+
+  .section-title {
+    font-size: var(--step-2);
+    text-align: center;
+  }
+}
+
+/* M5: cross-document page transition, CSS only. The nav has its own
+   view-transition-name, so it stays put while the page changes under it.
+   - default: horizontal slide; public/vt.js (optional) adds the `back`
+     type to reverse it.
+   - reduced motion: no movement, the pages cross-fade through a blur. */
+@layer motion {
+  @view-transition {
+    navigation: auto;
+  }
+
+  /* Short ease-out: the page moves on the first frame and lands cleanly.
+     (An ease-in start reads as lag; a long decelerating tail reads as
+     the page still creeping in.) Reduced motion overrides this below. */
+  ::view-transition-group(root) {
+    animation-duration: 0.22s;
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
+
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: inherit;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    ::view-transition-old(root) {
+      animation-name: slide-to-left;
+    }
+    ::view-transition-new(root) {
+      animation-name: slide-from-right;
+    }
+    html:active-view-transition-type(back) {
+      &::view-transition-old(root) {
+        animation-name: slide-to-right;
+      }
+      &::view-transition-new(root) {
+        animation-name: slide-from-left;
+      }
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    /* Slower and symmetric so the blur builds and clears gradually. */
+    ::view-transition-group(root) {
+      animation-duration: 0.4s;
+      animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
+    }
+    ::view-transition-old(root) {
+      animation-name: blur-out;
+    }
+    ::view-transition-new(root) {
+      animation-name: blur-in;
+    }
+  }
+
+  @keyframes slide-to-left {
+    to {
+      translate: -100% 0;
+    }
+  }
+  @keyframes slide-from-right {
+    from {
+      translate: 100% 0;
+    }
+  }
+  @keyframes slide-to-right {
+    to {
+      translate: 100% 0;
+    }
+  }
+  @keyframes slide-from-left {
+    from {
+      translate: -100% 0;
+    }
+  }
+  @keyframes blur-out {
+    to {
+      opacity: 0;
+      filter: blur(8px);
+    }
+  }
+  @keyframes blur-in {
+    from {
+      opacity: 0;
+      filter: blur(8px);
+    }
+  }
+}

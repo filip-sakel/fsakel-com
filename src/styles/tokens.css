@@ -1,0 +1,103 @@
+@layer reset, tokens, base, components, motion;
+
+@layer tokens {
+  :root {
+    color-scheme: light dark;
+
+    /* Color (light) */
+    --color-bg: #efe5d1;
+    --color-surface: #f6efdc;
+    --color-surface-hover: #fbf6e8;
+    --color-text: #1f1d1a;
+    --color-muted: #625e56;
+    /* Darkened from the mockup's #c0714a to pass WCAG AA (≥4.5:1) as text. */
+    --color-accent: #93502f;
+    --color-on-accent: #f6efdc;
+    --color-marker: #d6688a;
+    --color-rail: #b9b1a0;
+    --color-line: #ddd3b9;
+    --color-well-top: #e9dfc3;
+    --color-well-bottom: #f4edda;
+    --color-well-edge: #b8ad94;
+    /* Outline of raised controls and popovers (skills). */
+    --color-raised-edge: #b8ad94;
+    /* Sunken well (selected nav item, pressed/open controls): flat fill
+       inside a hairline that is shade on the top-left half and light on
+       the bottom-right (design/new_home_icon.svg). Use with
+       `border-color: transparent`. */
+    --well-bg:
+      linear-gradient(#f0e5d1 0 0) padding-box,
+      linear-gradient(165deg, #b2ac9d 50%, #e0d7c4 50%) border-box;
+    --color-photo-stroke: rgb(0 0 0 / 0.55);
+
+    /* Type */
+    --font-sans: 'Hanken Grotesk Variable', 'Hanken Grotesk', system-ui, sans-serif;
+    --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+    --step--1: clamp(0.84rem, 0.8rem + 0.15vw, 0.9rem);
+    --step-0: clamp(1rem, 0.96rem + 0.2vw, 1.0625rem);
+    --step-1: clamp(1.2rem, 1.1rem + 0.45vw, 1.4rem);
+    --step-2: clamp(1.45rem, 1.25rem + 0.9vw, 1.9rem);
+    --step-3: clamp(1.8rem, 1.45rem + 1.6vw, 2.6rem);
+
+    /* Space */
+    --space-2xs: 0.25rem;
+    --space-xs: 0.5rem;
+    --space-s: 0.75rem;
+    --space-m: 1.25rem;
+    --space-l: 2rem;
+    --space-xl: 3.5rem;
+    --space-2xl: 6rem;
+    --gutter: clamp(1rem, 4vw, 2.5rem);
+    --content-max: 46rem;
+    --wide-max: 62rem;
+
+    /* Shape & depth */
+    --radius-s: 0.5rem;
+    --radius-photo: 1.5rem;
+    --shadow-photo: 0 0.6rem 1.4rem -0.4rem rgb(60 40 20 / 0.35);
+    /* Sunken "pressed" well (selected nav item, open skill). */
+    /* Light from the top-left: shade inside the top-left edge, warm white
+       inside the bottom-right. */
+    --shadow-well: inset 2px 2px 2.5px #cbc3b2, inset -2px -2px 2.5px #fffff0;
+    --shadow-well-sm: var(--shadow-well);
+    --shadow-raised: 0 1px 0 rgb(255 255 255 / 0.8), 0 1px 2px rgb(70 50 20 / 0.12);
+    --shadow-pop: 0 0.5rem 1.5rem -0.5rem rgb(60 40 20 / 0.35);
+
+    --nav-h: 3.75rem;
+  }
+
+  /* Dark: warm charcoal with the same hues. Light mode is the default above. */
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-bg: #1c1a16;
+      --color-surface: #25221d;
+      --color-surface-hover: #2d2923;
+      --color-text: #ede5d0;
+      --color-muted: #a9a194;
+      --color-accent: #e3895c;
+      --color-on-accent: #1c1a16;
+      --color-marker: #e57b9a;
+      --color-rail: #4d473d;
+      --color-line: #36322a;
+      /* Dark wells: depth from lightness, not blur. A flat recess a step
+         darker than the page; the edge matches it so no outline shows. */
+      --color-well-top: #171511;
+      --color-well-bottom: #171511;
+      --color-well-edge: #171511;
+      --color-raised-edge: #3d382f;
+      --well-bg:
+        linear-gradient(var(--color-well-top), var(--color-well-bottom)) padding-box,
+        linear-gradient(var(--color-well-edge) 0 0) border-box;
+      --color-photo-stroke: rgb(255 255 255 / 0.14);
+
+      --shadow-photo: 0 0.6rem 1.4rem -0.4rem rgb(0 0 0 / 0.6);
+      /* Light from above: a crisp dark lip inside the top edge, and the
+         lower rim catching light just outside the bottom edge. */
+      --shadow-well: inset 0 1px 0 rgb(0 0 0 / 0.55), 0 1px 0 rgb(255 255 255 / 0.07);
+      --shadow-well-sm: inset 0 1px 0 rgb(0 0 0 / 0.5), 0 1px 0 rgb(255 255 255 / 0.06);
+      /* Raised: lit top edge, short dark shadow below. */
+      --shadow-raised: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 1px 2px rgb(0 0 0 / 0.5);
+      --shadow-pop: 0 0.5rem 1.5rem -0.5rem rgb(0 0 0 / 0.7);
+    }
+  }
+}
