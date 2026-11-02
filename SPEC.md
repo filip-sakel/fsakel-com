@@ -181,6 +181,8 @@ Only public, résumé-level facts are used. The site **excludes** phone, email, 
 
 Dark mode: a `prefers-color-scheme: dark` block in `tokens.css` overrides only color and shadow tokens; light values are unchanged. The accent is `#93502f` in light mode (the mockup's terracotta fails WCAG AA as text) and `#e3895c` in dark mode. The hero name is the hand-kerned wordmark `src/assets/name.svg` (fill `currentColor`), with visually hidden text in the `h1`.
 
+Grain and button fills: the page background carries a faint grain (`--grain` in `tokens.css`: an SVG `feTurbulence` tile blended over `--color-bg` with `background-blend-mode: overlay`, no CSS `filter`). The grain must average out to `--color-bg` exactly: its filter runs in sRGB (`color-interpolation-filters='sRGB'`), because the default linearRGB lightens and desaturates the page, which makes solid fills next to it look orange. The page, the sticky nav bar and the unselected (flat) nav items carry the grain. Raised and sunk buttons (nav, skills, footer contact, every `.neu`) are solid with no grain, and they share one fill, `--color-bg`, in both themes, so a raised button and a sunk one never differ in color, only in shadows and edges.
+
 ### 6.2 Layout
 
 - **Nav**: centered row of items (icon + label): Home, Projects, Education, Hobbies (Blog later). The current page sits in a sunken, skeuomorphic well (inset shadows and a lighter bottom lip, `aria-current="page"`); `:active` on any item previews the same press. The nav is sticky at the top. On narrow screens (< ~420px) labels stay visible; spacing shrinks first, then font size. No hamburger menu, since four items fit.

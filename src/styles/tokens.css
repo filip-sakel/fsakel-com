@@ -25,7 +25,7 @@
        the bottom-right (design/new_home_icon.svg). Use with
        `border-color: transparent`. */
     --well-bg:
-      linear-gradient(#f0e5d1 0 0) padding-box,
+      linear-gradient(var(--color-bg) 0 0) padding-box,
       linear-gradient(165deg, #cec2a5 50%, #e0d7c4 50%) border-box;
     --color-photo-stroke: rgb(0 0 0 / 0.55);
 
@@ -60,7 +60,6 @@
        raised casts --shade to the bottom-right and --hilite to the
        top-left; a sunk well has them inset. Channels only, so the shadows
        can compute their alpha. Light mode only; dark uses black/white. */
-    --raised-bg: var(--color-bg);
     --shade: 203 195 178; /* #cbc3b2 */
     --hilite: 255 255 240; /* #fffff0 */
     --well-hilite: 252 250 234; /* #fcfaea: --hilite nudged toward the bg */
@@ -73,8 +72,12 @@
     /* Page grain: an SVG noise tile (feTurbulence), contrast-boosted by
        feColorMatrix inside the SVG, so no CSS filter. Pair with
        `background-blend-mode: overlay` over --color-bg: overlay lightens
-       and darkens around mid-gray, so the average color stays the same. */
-    --grain: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='2 0 0 0 -.5 2 0 0 0 -.5 2 0 0 0 -.5 0 0 0 0 .3'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+       and darkens around mid-gray, so the average color stays the same.
+       The filter must work in sRGB: in the default linearRGB the noise
+       centers above mid-gray and washes the page out (lighter, less warm).
+       The page, nav bar and unselected nav items carry it; raised and
+       sunk buttons are solid --color-bg (src/styles/neu.css). */
+    --grain: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n' color-interpolation-filters='sRGB'><feTurbulence type='fractalNoise' baseFrequency='.73' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='2 0 0 0 -.5 2 0 0 0 -.5 2 0 0 0 -.5 0 0 0 0 .4'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
   }
 
   /* Dark: warm charcoal with the same hues. Light mode is the default above. */
@@ -102,9 +105,6 @@
       --color-photo-stroke: rgb(255 255 255 / 0.14);
 
       --shadow-photo: 0 0.6rem 1.4rem -0.4rem rgb(0 0 0 / 0.6);
-      /* Dark raised buttons keep a lighter surface: soft outer shadows
-         vanish on a near-black page. */
-      --raised-bg: var(--color-surface);
       --shadow-pop: 0 0.5rem 1.5rem -0.5rem rgb(0 0 0 / 0.7);
     }
   }

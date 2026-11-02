@@ -67,7 +67,11 @@
       calc(-3px * var(--light-x)) calc(-3px * var(--light-y)) calc(6px * var(--blur)) rgb(var(--hilite)),
       inset calc(2px * var(--pd)) calc(2px * var(--pd)) calc(2.5px * var(--pd)) rgb(var(--shade)),
       inset calc(-2px * var(--pd)) calc(-2px * var(--pd)) calc(2.5px * var(--pd)) rgb(var(--well-hilite));
-    --lt-bg: linear-gradient(var(--raised-bg) 0 0) padding-box, var(--press-edge) border-box, var(--raised-bg);
+    /* Every face is the solid page color, raised and sunk alike, with no
+       grain; depth comes from shadows and edges only, never from a
+       different fill. Only .neu-flat shows the page's grain. */
+    --face: linear-gradient(var(--color-bg) 0 0) padding-box;
+    --lt-bg: var(--face), var(--press-edge) border-box, var(--color-bg);
 
     /* Dark: soft neumorphism doesn't read on a dark page (the highlight
        glows). Lift comes from three stacked black shadows (contact, key,
@@ -85,10 +89,10 @@
       inset calc(2px * var(--pd)) calc(2px * var(--pd)) calc(5px * var(--pd)) rgb(0 0 0 / 0.35),
       inset calc(-1px * var(--pd)) calc(-1px * var(--pd)) calc(1px * var(--pd)) rgb(255 255 255 / calc(0.22 * var(--pd)));
     --dk-bg:
-      linear-gradient(rgb(28 26 22 / var(--p)) 0 0) border-box, /* --color-bg, faded in by the press */
-      linear-gradient(#29261f, #221f1a) padding-box,
+      var(--face),
+      linear-gradient(rgb(28 26 22 / var(--p)) 0 0) border-box, /* --color-bg, faded in by the press over the rim */
       linear-gradient(rgb(255 255 255 / var(--rim)), rgb(255 255 255 / 0.03) 45%, rgb(0 0 0 / 0.25)) border-box
-      var(--raised-bg);
+      var(--color-bg);
 
     background: var(--lt-bg);
     box-shadow: var(--lt-shadow);
@@ -123,13 +127,15 @@
     gap: inherit;
   }
 
-  /* Flat items fill with the page itself, grain included, so at rest they
-     blend into it. (Transparent won't do: the light press edge is a
-     border-box layer that would then show across the whole face.) */
+  /* No lift and, in dark, no lit rim: at rest it is just the page, grain
+     included, so it doesn't show as a smooth patch. (Transparent won't
+     do: the light press edge is a border-box layer that would then show
+     across the whole face.) */
   .neu-flat {
     --raised-depth: 0;
-    --lt-bg: var(--grain) padding-box, linear-gradient(var(--color-bg) 0 0) padding-box, var(--press-edge) border-box;
-    --dk-bg: var(--grain), var(--color-bg);
+    --face: var(--grain) padding-box, linear-gradient(var(--color-bg) 0 0) padding-box;
+    --dk-bg: var(--face);
+    /* Grain over the face; the layers under it paint normally. */
     background-blend-mode: overlay, normal;
   }
 
@@ -149,7 +155,11 @@
     --lt-shadow:
       inset calc(2px * var(--w-sx)) calc(2px * var(--w-sy)) calc(2.5px * var(--w-blur)) rgb(var(--shade)),
       inset calc(-2px * var(--w-hx)) calc(-2px * var(--w-hy)) calc(2.5px * var(--w-blur)) rgb(var(--well-hilite));
+    /* Solid, even on a .neu-flat (the nav's selected item): --well-bg's
+       fill is --color-bg too. */
+    --face: linear-gradient(var(--color-bg) 0 0) padding-box;
     --lt-bg: var(--well-bg);
+    background-blend-mode: normal;
     /* Dark: lit from the top-left like light mode. A crisp lip + soft
        shade inside the top and left edges, a lit inner wall at the bottom
        and right; hover leans them like the light ones. No outer
@@ -158,8 +168,7 @@
       inset calc(1px * var(--w-sx)) calc(1px * var(--w-sy)) 0 rgb(0 0 0 / 0.55),
       inset calc(2px * var(--w-sx)) calc(2px * var(--w-sy)) calc(5px * var(--w-blur)) rgb(0 0 0 / 0.35),
       inset calc(-1px * var(--w-hx)) calc(-1px * var(--w-hy)) calc(1px * var(--w-blur)) rgb(255 255 255 / calc(0.11 * (var(--w-hx) + var(--w-hy))));
-    --dk-bg: var(--color-bg);
-    background-blend-mode: normal; /* undo .neu-flat's grain blend */
+    --dk-bg: var(--face);
     transform: none;
 
     & > .neu-face {
