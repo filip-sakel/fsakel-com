@@ -41,6 +41,35 @@ function checkWebp(b, where) {
   }
 }
 
+// AVIF (ISOBMFF): metadata lives as items in meta/iinf. Reject Exif items and
+// mime items (XMP is a mime item with content type application/rdf+xml).
+function boxes(b, start, end, fn) {
+  for (let i = start; i + 8 <= end; ) {
+    let size = b.readUInt32BE(i), head = 8;
+    const type = b.toString("latin1", i + 4, i + 8);
+    if (size === 1) { size = Number(b.readBigUInt64BE(i + 8)); head = 16; }
+    else if (size === 0) size = end - i;
+    if (size < head || i + size > end) break;
+    fn(type, i + head, i + size);
+    i += size;
+  }
+}
+function checkAvif(b, where) {
+  boxes(b, 0, b.length, (type, s, e) => {
+    if (type !== "meta") return;
+    boxes(b, s + 4, e, (type, s, e) => {
+      if (type !== "iinf") return;
+      const v = b[s];
+      boxes(b, s + 4 + (v === 0 ? 2 : 4), e, (type, s, e) => {
+        if (type !== "infe" || b[s] < 2) return;
+        const t = s + 4 + (b[s] === 2 ? 2 : 4) + 2;
+        const itemType = b.toString("latin1", t, t + 4);
+        if (itemType === "Exif" || itemType === "mime") problems.push(`${where}: AVIF item ${itemType}`);
+      });
+    });
+  });
+}
+
 const SVG_METADATA = /<metadata\b|<!--|xmlns:(?:rdf|dc|cc|inkscape|sodipodi|sketch|figma|xap|xmp)\b|\b(?:inkscape|sodipodi|sketch):/i;
 function checkSvg(text, where) {
   const match = text.match(SVG_METADATA);
@@ -49,7 +78,7 @@ function checkSvg(text, where) {
 }
 
 function checkDataUris(text, where) {
-  for (const [, kind, data] of text.matchAll(/data:image\/(png|jpeg|jpg|webp|svg\+xml);base64,([A-Za-z0-9+/=]+)/g))
+  for (const [, kind, data] of text.matchAll(/data:image\/(png|jpeg|jpg|webp|avif|svg\+xml);base64,([A-Za-z0-9+/=]+)/g))
     checkBytes(kind, Buffer.from(data, "base64"), `${where} (inline ${kind})`);
 }
 
@@ -57,11 +86,12 @@ function checkBytes(kind, b, where) {
   if (kind === "png") checkPng(b, where);
   else if (kind === "jpeg" || kind === "jpg") checkJpeg(b, where);
   else if (kind === "webp") checkWebp(b, where);
+  else if (kind === "avif") checkAvif(b, where);
   else if (kind === "svg+xml" || kind === "svg") checkSvg(b.toString("utf8"), where);
 }
 
-const IMAGE = new Set([".png", ".jpg", ".jpeg", ".webp", ".svg"]);
-const UNSUPPORTED = new Set([".gif", ".avif", ".heic", ".tif", ".tiff", ".ico", ".bmp"]);
+const IMAGE = new Set([".png", ".jpg", ".jpeg", ".webp", ".avif", ".svg"]);
+const UNSUPPORTED = new Set([".gif", ".heic", ".tif", ".tiff", ".ico", ".bmp"]);
 const TEXT = new Set([".html", ".js", ".mjs", ".css", ".json"]);
 
 function walk(dir) {
