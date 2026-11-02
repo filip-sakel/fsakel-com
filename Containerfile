@@ -11,6 +11,9 @@ RUN pnpm build
 
 # ---- serve ----
 FROM docker.io/library/caddy:2-alpine
+# The image gives caddy cap_net_bind_service; with cap_drop ALL (compose.yaml)
+# the kernel refuses to exec it. Port 3000 needs no capability, so drop it.
+RUN setcap -r /usr/bin/caddy
 COPY deploy/Caddyfile /etc/caddy/Caddyfile
 COPY --from=build /app/dist /srv
 # Caddy keeps TLS bookkeeping in XDG_DATA_HOME; point it at the tmpfs.
