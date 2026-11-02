@@ -1,0 +1,37 @@
+# In-container static server. TLS and the public domain are handled by the
+# host's Caddy, which reverse-proxies to this container on 127.0.0.1:8080.
+{
+	admin off
+	auto_https off
+	persist_config off
+	storage file_system /tmp/caddy
+}
+
+:8080 {
+	root * /srv
+	encode zstd gzip
+
+	header {
+		Content-Security-Policy "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'"
+		Referrer-Policy strict-origin-when-cross-origin
+		X-Content-Type-Options nosniff
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		-Server
+	}
+
+	@hashed path /_astro/*
+	header @hashed Cache-Control "public, max-age=31536000, immutable"
+
+	@small path /vt.js /favicon.svg
+	header @small Cache-Control "public, max-age=86400"
+
+	@html path / *.html */
+	header @html Cache-Control "no-cache"
+
+	file_server
+
+	handle_errors 404 {
+		rewrite * /404.html
+		file_server
+	}
+}
