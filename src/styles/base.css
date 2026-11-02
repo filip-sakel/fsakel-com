@@ -108,7 +108,7 @@
 
 /* M5: cross-document page transition, CSS only. The nav has its own
    view-transition-name, so it stays put while the page changes under it.
-   - default: horizontal slide; public/vt.js (optional) adds the `back`
+   - default: horizontal slide; src/scripts/vt.js (optional) adds the `back`
      type to reverse it.
    - reduced motion: no movement, the pages cross-fade through a blur. */
 @layer motion {
@@ -120,7 +120,7 @@
      (An ease-in start reads as lag; a long decelerating tail reads as
      the page still creeping in.) Reduced motion overrides this below. */
   ::view-transition-group(root) {
-    animation-duration: 0.22s;
+    animation-duration: 0.16s;
     animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
   }
 

@@ -4,6 +4,7 @@
 FROM docker.io/library/node:24-alpine AS build
 WORKDIR /app
 RUN corepack enable
+ENV ASTRO_TELEMETRY_DISABLED=1
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 COPY . .

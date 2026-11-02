@@ -176,7 +176,7 @@ Only public, résumé-level facts are used. The site **excludes** phone, email, 
 | `--color-marker` | `#D9708A` (rose; called "purple dot" in the brief) | timeline dot and progress fill |
 | `--color-rail` | `#B9B1A0` | timeline rail |
 | `--font-sans` | Hanken Grotesk (variable) | headings, body |
-| `--font-mono` | IBM Plex Mono | timeline dates |
+| `--font-mono` | System monospace (`ui-monospace` stack; no web font) | timeline dates |
 | `--radius-photo` | ~24px | portrait |
 
 Dark mode: a `prefers-color-scheme: dark` block in `tokens.css` overrides only color and shadow tokens; light values are unchanged. The accent is `#93502f` in light mode (the mockup's terracotta fails WCAG AA as text) and `#e3895c` in dark mode. The hero name is the hand-kerned wordmark `src/assets/name.svg` (fill `currentColor`), with visually hidden text in the `h1`.
@@ -206,7 +206,7 @@ The default (unguarded) CSS is always the finished static state.
 | M2 | Fixed marker, moving content | Each entry's marker is `position: sticky` at `--dot-y` inside its own entry, so the active dot stays put while text scrolls past. | Same: `position: sticky` needs no scroll-driven support. Without CSS, it's a plain list. |
 | M3 | Marker hand-off | One pinned dot (with a glow above and below) lives in a track spanning the rail; it is `position: sticky` at `--dot-y`, appears the moment the first marker reaches the line, and rides off with the rail's end. Each entry's marker is rose and grows from a flat pill into a circle as it rises (shape only, in every motion mode) and is hidden the instant it lands under the pinned dot. Driven by one probe per entry whose `view-timeline-inset` puts the scrollport edge at `--dot-y`. | Plain timeline: a static rose circle per entry, no pinned dot. Firefox 158 lands here. |
 | M4 | Active entry | Each entry animates from muted to full opacity/color as it crosses the dot's line (`view()` timeline, `animation-range` tuned to the sticky offset). Its logo fades in at the same time. | All entries are fully visible with their logos shown. |
-| M5 | Page slide | Cross-document view transition. The page slides horizontally while the nav (its own `view-transition-name`) stays put. The default is forward (the new page comes in from the right). `public/vt.js` (~0.5 KB, an optional `pagereveal` listener) adds the `back` type when the destination comes earlier in the nav order, which reverses the slide. | Normal navigation; without JS, every slide goes forward. |
+| M5 | Page slide | Cross-document view transition. The page slides horizontally while the nav (its own `view-transition-name`) stays put. The default is forward (the new page comes in from the right). `src/scripts/vt.js` (~0.6 KB gzipped, optional, inlined in `<head>` and allowed by a CSP hash) adds the `back` type when the destination comes earlier in the nav order, which reverses the slide, and keeps a clicked nav item selected until the new page shows. | Normal navigation; without JS, every slide goes forward. |
 | M6 | Hero entrance | A subtle fade/translate on load (`@starting-style` or a plain keyframe). | Static. |
 
 **Reduced motion** never means *no* feedback: movement is swapped for blur and fade. The page transition cross-fades through a blur, the hero and heading sharpen in, the cue blurs out (it never bobs), and timeline markers keep their scroll-driven pill-to-circle shape change (the reader's scrolling drives it), with no blur. Every scroll-driven effect still sits behind `@supports (animation-timeline: view())`.
@@ -245,7 +245,7 @@ The default (unguarded) CSS is always the finished static state.
 
 ## 11. Decisions and open questions
 
-Decided: newest first with résumé dates; name "Filip"; Hanken Grotesk + IBM Plex Mono; contact is a footer block (`#contact`).
+Decided: newest first with résumé dates; name "Filip"; Hanken Grotesk + system monospace; contact is a footer block (`#contact`).
 
 Open:
 1. **Highlights**: currently Pirouette RA, GSoC, Trainfo, Dartmouth (set `highlight: true` in any entry's frontmatter).

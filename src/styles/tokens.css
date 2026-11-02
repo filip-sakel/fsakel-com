@@ -32,7 +32,9 @@
 
     /* Type */
     --font-sans: 'Hanken Grotesk Variable', 'Hanken Grotesk', system-ui, sans-serif;
-    --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+    /* System monospace: no font download (SF Mono on Apple, Cascadia/Consolas
+       on Windows, Roboto Mono on Android, DejaVu/Liberation on Linux). */
+    --font-mono: ui-monospace, 'SF Mono', Menlo, 'Cascadia Mono', Consolas, 'Roboto Mono', 'Liberation Mono', monospace;
     --step--1: clamp(0.84rem, 0.8rem + 0.15vw, 0.9rem);
     --step-0: clamp(1rem, 0.96rem + 0.2vw, 1.0625rem);
     --step-1: clamp(1.2rem, 1.1rem + 0.45vw, 1.4rem);

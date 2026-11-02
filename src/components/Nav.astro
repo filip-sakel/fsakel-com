@@ -89,6 +89,12 @@ const isCurrent = (href: string) => (href === '/' ? path === '/' : path.startsWi
     }
   }
 
+  /* src/scripts/vt.js moves the selection on click; switch it instantly so
+     the page-transition snapshot shows the settled state. */
+  .site-nav[data-navigating] a {
+    transition: none;
+  }
+
   /* Very narrow phones: icons go before labels shrink further. */
   @media (width < 400px) {
     a :global(svg) {

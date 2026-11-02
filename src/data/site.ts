@@ -12,7 +12,7 @@ export const site = {
 /**
  * Icons are Iconify names, inlined at build time by astro-icon (only the ones
  * used ship). Browse: https://icon-sets.iconify.design/material-symbols/
- * The nav order also drives the page-slide direction (see public/vt.js).
+ * The nav order also drives the page-slide direction (see src/scripts/vt.js).
  */
 export const nav: { label: string; href: string; icon: string }[] = [
   { label: 'Home', href: '/', icon: 'material-symbols:home-outline-rounded' },

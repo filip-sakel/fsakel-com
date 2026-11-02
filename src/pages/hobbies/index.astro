@@ -5,6 +5,14 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getHobbies, hasWriteUp } from '../../data/content';
 
 const hobbies = await getHobbies();
+
+// Rendered photo widths (see .cards / .photos below). One column until the
+// wrap fits two 17rem cards (~38rem viewport); past that a card's inner width
+// tops out near 22rem. A lone/leading photo spans the card, others half of it.
+const sizes = {
+  full: '(width >= 38rem) 22rem, calc(100vw - 4.5rem)',
+  half: '(width >= 38rem) 11rem, calc(50vw - 2.5rem)',
+};
 ---
 
 <BaseLayout title="Hobbies" description="Running, swimming, biking, public transit, and open source.">
@@ -12,7 +20,7 @@ const hobbies = await getHobbies();
     <h1>Hobbies</h1>
     <ul class="cards" role="list">
       {
-        hobbies.map((h) => (
+        hobbies.map((h, hi) => (
           <li class="card" id={h.id}>
             <h2>
               {h.data.icon && <Icon name={h.data.icon} size={22} aria-hidden="true" />}
@@ -21,9 +29,17 @@ const hobbies = await getHobbies();
             <p>{h.data.blurb}</p>
             {h.data.photos.length > 0 && (
               <div class="photos">
-                {h.data.photos.map((p) => (
+                {h.data.photos.map((p, pi) => (
                   <figure>
-                    <Image src={p.src} alt={p.alt} width={640} widths={[320, 640]} sizes="(width >= 40rem) 20rem, 100vw" />
+                    <Image
+                      src={p.src}
+                      alt={p.alt}
+                      widths={[240, 360, 480, 640, 800]}
+                      sizes={pi === 0 && h.data.photos.length % 2 === 1 ? sizes.full : sizes.half}
+                      format="avif"
+                      quality="mid"
+                      priority={hi === 0 && pi === 0}
+                    />
                     {p.caption && <figcaption>{p.caption}</figcaption>}
                   </figure>
                 ))}
@@ -103,6 +119,13 @@ const hobbies = await getHobbies();
       aspect-ratio: 4 / 3;
       object-fit: cover;
       border-radius: calc(var(--radius-s) - 2px);
+      /* Placeholder: the page lays out and paints at once; until a photo
+         arrives its frame shows as a sunken well with the same hairline
+         as the hero photo. (The CSP forbids per-image inline styles, so
+         no per-photo color/blur preview.) */
+      background: var(--well-bg);
+      outline: 0.5px solid var(--color-photo-stroke);
+      outline-offset: -0.5px;
     }
 
     & figcaption {

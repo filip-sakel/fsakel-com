@@ -11,8 +11,13 @@
 	root * /srv
 	encode zstd gzip
 
+	# script-src 'sha256-…': the SHA-256 of the one inline script, the
+	# contents of src/scripts/vt.js as BaseLayout.astro inlines it (whole-line
+	# comments stripped). Only a script with exactly those bytes may run inline.
+	# After editing vt.js, `pnpm check` fails and prints the new hash to paste
+	# here.
 	header {
-		Content-Security-Policy "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'"
+		Content-Security-Policy "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self' 'sha256-m8dL1UhfGrAllwv2xK5Pl3S+QZu/pLFOzta2aNRvp5I='; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'"
 		Referrer-Policy strict-origin-when-cross-origin
 		X-Content-Type-Options nosniff
 		Permissions-Policy "camera=(), microphone=(), geolocation=()"
@@ -22,11 +27,19 @@
 	@hashed path /_astro/*
 	header @hashed Cache-Control "public, max-age=31536000, immutable"
 
-	@small path /vt.js /favicon.svg
+	@small path /favicon.svg
 	header @small Cache-Control "public, max-age=86400"
 
 	@html path / *.html */
 	header @html Cache-Control "no-cache"
+	# Prerender same-site pages on hover/pointerdown so a click swaps in an
+	# already-loaded page (Chromium). Sent as a header so the CSP needs no
+	# second inline-script hash.
+	header @html Speculation-Rules "\"/speculation-rules.json\""
+
+	@rules path /speculation-rules.json
+	header @rules Content-Type application/speculationrules+json
+	header @rules Cache-Control "public, max-age=86400"
 
 	file_server
 

@@ -215,6 +215,8 @@ if (!start) throw new Error(`Highlighted entry "${entry.id}" needs a start date`
     }
   }
 
+  /* TODO (docs/performance.md, Open questions): width/height is not
+     composited; scale would be, at the cost of an ellipse instead of a pill. */
   @keyframes dot-arrive {
     from {
       width: 0.75rem;

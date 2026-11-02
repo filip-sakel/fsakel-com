@@ -31,15 +31,22 @@ const { href, label } = Astro.props;
 
   /* M1: as soon as the page scrolls, the cue lifts and fades (reduced
      motion: blurs out in place); the real heading (Timeline.astro) takes
-     over. Static fallback: a jump link. */
+     over. Static fallback: a jump link.
+
+     The fade runs on the compositor (opacity/translate/filter only).
+     Hiding (out of the tab order) is a separate step at the end, since one
+     non-compositable property would pull the whole fade onto the main
+     thread. */
   @supports (animation-timeline: scroll()) {
     .scroll-cue {
-      animation: cue-out linear both;
-      animation-timeline: scroll(root);
+      animation:
+        cue-out linear both,
+        cue-hide step-end both;
+      animation-timeline: scroll(root), scroll(root);
       animation-range: 0 25svh;
 
       @media (prefers-reduced-motion: reduce) {
-        animation-name: cue-blur-out;
+        animation-name: cue-blur-out, cue-hide;
       }
     }
   }
@@ -48,7 +55,6 @@ const { href, label } = Astro.props;
     to {
       opacity: 0;
       translate: 0 -1.5rem;
-      visibility: hidden;
     }
   }
 
@@ -56,6 +62,11 @@ const { href, label } = Astro.props;
     to {
       opacity: 0;
       filter: blur(6px);
+    }
+  }
+
+  @keyframes cue-hide {
+    to {
       visibility: hidden;
     }
   }

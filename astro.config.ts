@@ -20,6 +20,13 @@ export default defineConfig({
       // the `animation` shorthand, which Chromium rejects (breaking every
       // scroll-driven animation).
       cssTarget: ['chrome120', 'safari17', 'firefox128'],
+      // One site-wide stylesheet (~6 KB compressed): fetched once, then every
+      // navigation needs only the HTML, never a new per-page CSS round-trip.
+      cssCodeSplit: false,
+      // Never inline fonts as data: URIs. The CSP has no font-src, so
+      // default-src 'self' blocks them; and a unicode-range subset is only
+      // fetched when needed, so inlining just bloats the stylesheet.
+      assetsInlineLimit: (file) => (/\.(woff2?|ttf|otf)$/.test(file) ? false : undefined),
     },
   },
 });
