@@ -17,6 +17,7 @@ const isCurrent = (href: string) => (href === '/' ? path === '/' : path.startsWi
                 <Icon name={item.icon} size={18} aria-hidden="true" />
                 <span class="label">{item.label}</span>
               </span>
+              <label class="haptic" aria-hidden="true"><input type="checkbox" {...{ switch: true }} hidden /></label>
             </a>
           </li>
         ))
@@ -89,6 +90,19 @@ const isCurrent = (href: string) => (href === '/' ? path === '/' : path.startsWi
       /* Icon and label sit slightly lower in the well. */
       translate: 0 0.5px;
     }
+  }
+
+  /* iOS haptic tap target, shown only once src/scripts/haptic.js has run
+     (it navigates for the label). Covers the link and its hover fringe
+     (neu.css), so every tap toggles the hidden switch. */
+  .haptic {
+    display: none;
+  }
+  :global(.haptic-on) .haptic {
+    display: block;
+    position: absolute;
+    inset: -4px;
+    border-radius: inherit;
   }
 
   /* src/scripts/vt.js holds a clicked item pressed until the next page

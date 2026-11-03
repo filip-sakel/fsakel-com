@@ -12,12 +12,12 @@
 	encode zstd gzip
 
 	# script-src 'sha256-…': the SHA-256 of the one inline script:
-	# src/scripts/vt.js + neu.js as BaseLayout.astro inlines them (whole-line
-	# comments stripped). Only a script with exactly those bytes may run inline.
-	# After editing either, `pnpm check` fails and prints the new hash to paste
-	# here.
+	# src/scripts/vt.js + neu.js + haptic.js as BaseLayout.astro inlines them
+	# (whole-line comments stripped). Only a script with exactly those bytes may
+	# run inline. After editing any of them, `pnpm check` fails and prints the
+	# new hash to paste here.
 	header {
-		Content-Security-Policy "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self' 'sha256-8w3O5pGkmf74ToEp/JgkGdNsX7e2KBOmgZ58a6hj/QM='; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'"
+		Content-Security-Policy "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self' 'sha256-rGb9Wh5pgOSOWQ4l5cyhQB0BpI6z8GDZTC578e5sa4A='; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'"
 		Referrer-Policy strict-origin-when-cross-origin
 		X-Content-Type-Options nosniff
 		Permissions-Policy "camera=(), microphone=(), geolocation=()"

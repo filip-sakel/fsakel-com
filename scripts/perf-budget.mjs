@@ -15,7 +15,7 @@ const sha = (text) => `'sha256-${createHash("sha256").update(text).digest("base6
 
 const BUDGET = {
   pageGzip: 50 * 1024, // HTML + CSS + JS per page, gzipped (SPEC.md)
-  jsRaw: 2 * 1024, // all scripts on a page, inline or external; today only the inlined vt.js + neu.js
+  jsRaw: 2 * 1024, // all scripts on a page, inline or external; today only the inlined vt.js, neu.js, haptic.js
   stylesheets: 1, // more than one means a per-page CSS round-trip again
   eagerImages: 1, // only the LCP image may skip lazy loading
 };
