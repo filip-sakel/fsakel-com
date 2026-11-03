@@ -1,0 +1,165 @@
+<!doctype html>
+<!--
+  Haptics Prototype Lab: one haptic tick on tap, on Android and iOS. Distilled
+  from samdenty/ios-vibrator-pro-max. Not part of the build (design/ is
+  outside src/ and public/, and excluded from the container).
+
+  Serve on the LAN to test on a phone:
+    python3 -m http.server 5000 --bind 0.0.0.0 -d design/prototypes
+    → http://<this-machine's-ip>:5000/haptics-lab.html
+
+  Usage: add data-haptic to a button. Tapping it ticks. No JS calls.
+
+  How it works
+    • Vibration API (Android): a delegated click listener calls
+      navigator.vibrate(26), about as long as one iOS switch tick.
+    • No Vibration API (iOS): a real tap that toggles an
+      <input type="checkbox" switch> plays the system tick. So each
+      [data-haptic] gets a transparent, aria-hidden <label> over it wrapping
+      a hidden switch. The tap lands on the label, the click bubbles to the
+      element's own handlers as usual, and the label toggles the switch.
+    • Don't put data-haptic on links: on iOS the label swallows navigation.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Haptics Prototype Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500&family=IBM+Plex+Mono&display=swap" rel="stylesheet">
+
+<script>
+/* Haptic tick on [data-haptic] taps. Copy this block out to reuse it. */
+(() => {
+  const SEL = '[data-haptic]';
+
+  if (navigator.vibrate) {
+    addEventListener('click', (e) => { if (e.target.closest?.(SEL)) navigator.vibrate(26); });
+    return;
+  }
+
+  const attach = (el) => {
+    if (el.querySelector(':scope > label[data-haptic-switch]')) return;
+    const label = document.createElement('label');
+    const input = document.createElement('input');
+    input.type = 'checkbox';
+    input.setAttribute('switch', '');
+    input.tabIndex = -1;
+    input.style.display = 'none';
+    // The label re-dispatches the click on its input; stop that copy from
+    // bubbling up and running the element's handlers a second time.
+    input.addEventListener('click', (e) => e.stopPropagation());
+    label.dataset.hapticSwitch = '';
+    label.ariaHidden = 'true';
+    label.style.cssText = 'position:absolute;inset:0;border-radius:inherit;cursor:inherit';
+    if (getComputedStyle(el).position === 'static') el.style.position = 'relative';
+    label.append(input);
+    el.append(label);
+  };
+  const scan = (root) => {
+    if (root.matches?.(SEL)) attach(root);
+    root.querySelectorAll?.(SEL).forEach(attach);
+  };
+  const mount = () => {
+    scan(document.body);
+    new MutationObserver((ms) => ms.forEach((r) => r.addedNodes.forEach(scan)))
+      .observe(document.body, { childList: true, subtree: true });
+  };
+  document.body ? mount() : document.addEventListener('DOMContentLoaded', mount);
+})();
+</script>
+
+<style>
+  :root {
+    color-scheme: light;
+    --color-bg: #efe5d1;
+    --color-text: #1f1d1a;
+    --color-muted: #625e56;
+    --color-accent: #93502f;
+    --color-line: #ddd3b9;
+    --surface: #f6eedd;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --color-bg: #1c1a16;
+      --color-text: #ede5d0;
+      --color-muted: #a9a194;
+      --color-accent: #e3895c;
+      --color-line: #36322a;
+      --surface: #25221d;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --color-bg: #1c1a16;
+    --color-text: #ede5d0;
+    --color-muted: #a9a194;
+    --color-accent: #e3895c;
+    --color-line: #36322a;
+    --surface: #25221d;
+  }
+
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    min-height: 100vh;
+    background: var(--color-bg);
+    color: var(--color-text);
+    font: 400 1rem/1.5 'Hanken Grotesk', system-ui, sans-serif;
+    padding: 2rem 16px 4rem;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .wrap { max-width: 40rem; margin: 0 auto; display: grid; gap: 1.75rem; }
+  h1 { font-size: 1.4rem; font-weight: 500; }
+  .lede, .note { color: var(--color-muted); font-size: 0.92rem; }
+  .mono { font: 0.78rem/1.45 'IBM Plex Mono', ui-monospace, monospace; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr)); gap: 0.6rem; }
+  #form { display: contents; }
+  button {
+    font: inherit; color: inherit; cursor: pointer;
+    padding: 0.85rem 0.9rem; text-align: left;
+    background: var(--surface); border: 1px solid var(--color-line); border-radius: 12px;
+    display: grid; gap: 0.1rem; touch-action: manipulation;
+  }
+  button:active { transform: translateY(1px); border-color: var(--color-accent); }
+  button small { font: 0.7rem 'IBM Plex Mono', ui-monospace, monospace; color: var(--color-muted); }
+
+  #log {
+    max-height: 14rem; overflow: auto; padding: 0.75rem 1rem;
+    border: 1px solid var(--color-line); border-radius: 12px; background: var(--surface);
+    white-space: pre-wrap;
+  }
+  #log:empty::before { content: 'Tap something.'; color: var(--color-muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Haptics Prototype Lab</h1>
+    <p class="lede">One tick per tap on buttons with <code>data-haptic</code>. On iPhone, turn on Settings → Sounds &amp; Haptics → System Haptics.</p>
+  </header>
+
+  <p class="mono" id="mode"></p>
+
+  <div class="grid">
+    <button data-haptic id="tick">Tick<small>data-haptic</small></button>
+    <form id="form"><button data-haptic type="submit">Submit<small>data-haptic, form</small></button></form>
+    <button id="plain">Plain<small>no data-haptic</small></button>
+  </div>
+  <p class="note">Tick and Submit tick; Plain is silent. Every handler runs once, and Submit still submits.</p>
+
+  <div id="log" class="mono"></div>
+</div>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+  $('mode').textContent = `method: ${navigator.vibrate ? 'Vibration API' : 'iOS switch'}`;
+  const t0 = performance.now();
+  const log = (msg) => $('log').prepend(`${((performance.now() - t0) / 1000).toFixed(2).padStart(6)}s  ${msg}\n`);
+  $('tick').addEventListener('click', () => log('Tick clicked'));
+  $('plain').addEventListener('click', () => log('Plain clicked'));
+  $('form').addEventListener('submit', (e) => { e.preventDefault(); log('submitted'); });
+</script>
+</body>
+</html>
