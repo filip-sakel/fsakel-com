@@ -112,6 +112,11 @@ it stops applying.
 - **Lighthouse's estimated savings are simulated.** It prices every
   request at a slow-4G round-trip. Use them to rank issues, not as real
   numbers, and confirm a fix with a before/after run.
+- **Lighthouse can't measure prerendering.** Chrome disables it while
+  DevTools/CDP controls the page (`PrerenderingDisabledByDevTools`). Launch
+  Chrome without CDP, attach after load, and check
+  `performance.getEntriesByType("navigation")[0].activationStart > 0` on the
+  next page.
 - **Unscored audits are leads, not failures.** A request chain that ends in
   a `font-display: swap` font blocks nothing.
 
@@ -160,6 +165,15 @@ it stops applying.
   Without it, a click waits a full round-trip before the slide starts. The
   transition waits for the new page's first frame (HTML plus the blocking
   CSS), not its images.
+- **Don't prerender the nav pages with `eagerness: "immediate"`.** Tried
+  2026-11-02: a list rule for `/`, `/projects/`, `/education/`, `/hobbies/`.
+  Every nav click then activated a prerender, but the three background
+  prerenders compete with the landing page for bandwidth and CPU. Cold-load
+  LCP got worse on every page, from ~1420 to ~1800 ms on average (+27%). FCP
+  got worse by a similar amount; TTFB didn't change. Setup: Slow-4G proxy
+  (150 ms RTT, 1.6 Mbps), one CPU core, 15 runs (cut short; the direction was
+  the same in every pair). Hover prerendering gets most of the benefit on
+  desktop and costs the first page nothing.
 - **The pressed nav item stays selected until the next page shows.** When a
   click is released `:active` ends, so the item used to pop back up until the
   new page arrived. `src/scripts/vt.js` moves `aria-current` on click (and
