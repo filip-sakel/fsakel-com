@@ -176,10 +176,11 @@ it stops applying.
   desktop and costs the first page nothing.
 - **The pressed nav item stays selected until the next page shows.** When a
   click is released `:active` ends, so the item used to pop back up until the
-  new page arrived. `src/scripts/vt.js` moves `aria-current` on click (and
-  undoes it on a back/forward-cache restore).
-- **Keep the slide short** (0.16 s, `src/styles/base.css`). At 0.22 s it felt
-  sluggish.
+  new page arrived. `src/scripts/vt.js` marks it `data-held` on click, which
+  keeps it pressed (and clears it on a back/forward-cache restore).
+- **The slide matches the nav selection's move** (0.3 s, `src/styles/base.css`
+  and `src/components/Nav.astro`), so both land together. It was 0.16 s
+  before; 0.22 s felt sluggish then, when the nav didn't animate.
 
 ### Animation
 

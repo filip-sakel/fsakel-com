@@ -27,7 +27,10 @@ addEventListener('pagereveal', (e) => {
 let held;
 addEventListener('click', (e) => {
   const a = e.target.closest?.('.site-nav a');
-  if (!a || a.hasAttribute('aria-current') || e.defaultPrevented || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+  if (!a || e.defaultPrevented || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+  // Already on this page: stay put (no reload, no slide).
+  if (a.pathname === location.pathname) return e.preventDefault();
+  if (a.hasAttribute('aria-current')) return;
   held = a;
   a.dataset.held = '';
 });

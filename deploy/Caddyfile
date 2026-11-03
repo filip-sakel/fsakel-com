@@ -17,7 +17,7 @@
 	# After editing either, `pnpm check` fails and prints the new hash to paste
 	# here.
 	header {
-		Content-Security-Policy "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self' 'sha256-dsKHEwOgCZFFUgCeh4fMiKlrSSbDoQm8QcAMZh1aLLc='; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'"
+		Content-Security-Policy "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self' 'sha256-P8FxC9WGzXJUmsn1bTA/bZ6pmfpmvgCJon3YTIlbwCs='; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'"
 		Referrer-Policy strict-origin-when-cross-origin
 		X-Content-Type-Options nosniff
 		Permissions-Policy "camera=(), microphone=(), geolocation=()"

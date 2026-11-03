@@ -129,13 +129,36 @@ const isCurrent = (href: string) => (href === '/' ? path === '/' : path.startsWi
       white-space: nowrap;
     }
 
+    /* The label's column is 0fr collapsed, 1fr (its own width) selected.
+       Animating that is smooth everywhere; animating width to auto needs
+       interpolate-size, which WebKit lacks, so it jumped halfway. */
+    .neu-face {
+      display: grid;
+      grid-template-columns: auto 0fr;
+    }
+
+    [aria-current='page'] .neu-face {
+      grid-template-columns: auto 1fr;
+    }
+
+    .neu-face :global(svg) {
+      grid-column: 1;
+    }
+
+    /* Text pinned to the label's right edge, so as the column opens it
+       slides out from behind the icon instead of being uncovered in place.
+       clip, not hidden: a hidden box can scroll, and WebKit leaves the
+       overflowing text scrolled by a pixel until it fits, then snaps. */
     .label {
-      overflow: hidden;
+      grid-column: 2;
+      display: flex;
+      justify-content: flex-end;
+      min-width: 0;
+      overflow: clip;
       padding-inline-start: 0.4em;
     }
 
     a:not([aria-current='page']) .label {
-      width: 0;
       padding-inline-start: 0;
       opacity: 0;
     }
@@ -146,20 +169,26 @@ const isCurrent = (href: string) => (href === '/' ? path === '/' : path.startsWi
      icon while the new item's label grows out of its well. (The nav's own
      page-transition crossfade is off, base.css, so this is what shows.) */
   @media (prefers-reduced-motion: no-preference) {
-    .site-nav {
-      interpolate-size: allow-keywords;
-    }
-
     a[data-was] {
       animation: nav-unpress 0.3s ease-out;
     }
 
     @media (width < 30rem) {
-      a[data-was] .label {
-        animation: nav-label-out 0.3s cubic-bezier(0.2, 0, 0, 1);
+      a[data-was] {
+        & .neu-face {
+          animation: nav-face-out 0.3s cubic-bezier(0.2, 0, 0, 1);
+        }
+        & .label {
+          animation: nav-label-out 0.3s cubic-bezier(0.2, 0, 0, 1);
+        }
       }
-      .site-nav:has([data-was]) [aria-current='page'] .label {
-        animation: nav-label-in 0.3s cubic-bezier(0.2, 0, 0, 1);
+      .site-nav:has([data-was]) [aria-current='page'] {
+        & .neu-face {
+          animation: nav-face-in 0.3s cubic-bezier(0.2, 0, 0, 1);
+        }
+        & .label {
+          animation: nav-label-in 0.3s cubic-bezier(0.2, 0, 0, 1);
+        }
       }
     }
   }
@@ -169,16 +198,24 @@ const isCurrent = (href: string) => (href === '/' ? path === '/' : path.startsWi
       --p: 1;
     }
   }
+  @keyframes nav-face-in {
+    from {
+      grid-template-columns: auto 0fr;
+    }
+  }
+  @keyframes nav-face-out {
+    from {
+      grid-template-columns: auto 1fr;
+    }
+  }
   @keyframes nav-label-in {
     from {
-      width: 0;
       padding-inline-start: 0;
       opacity: 0;
     }
   }
   @keyframes nav-label-out {
     from {
-      width: auto;
       padding-inline-start: 0.4em;
       opacity: 1;
     }

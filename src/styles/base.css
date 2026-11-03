@@ -124,11 +124,12 @@
     background-blend-mode: overlay;
   }
 
-  /* Short ease-out: the page moves on the first frame and lands cleanly.
+  /* Same length as the nav selection's move (Nav.astro), so the two land
+     together. Ease-out: the page moves on the first frame and lands cleanly.
      (An ease-in start reads as lag; a long decelerating tail reads as
      the page still creeping in.) Reduced motion overrides this below. */
   ::view-transition-group(root) {
-    animation-duration: 0.16s;
+    animation-duration: 0.3s;
     animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
   }
 
