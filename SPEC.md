@@ -157,6 +157,8 @@ Typed constants: display name, tagline, photo import, nav items (label, href, ic
 
 Only public, résumé-level facts are used. The site **excludes** phone, email, work-authorization notes, and any line marked `TODO(confirm)` in the résumé source.
 
+**The résumé is the source of truth.** Nothing goes on the site (projects, education, roles, skills, dates, bullets) unless it is in the résumé. New content enters the résumé first; the résumé agent then carries it over to the site. Edits made directly on the site may reword, restructure, or remove content, but must not add facts that aren't in the résumé. **Exception:** hobby content (`hobbies/`) is site-only and may be added directly.
+
 - **projects/**: `pirouette-ra` (Vassar, Sep 2026–Present), `gsoc-swift` (May–Aug 2026), `cs-coach` (Vassar, Sep 2024–May 2026; may merge with `pirouette-ra`), `dartmouth-georgakoudi` (Jun 2024–Aug 2025), `tufts-georgakoudi` (Jul–Aug 2022, JBO paper), `trainfo` (Jan 2024–Present), `swift-typegraph` (Oct 2026), `anatolia-clubs` (Jun 2022–Mar 2023, with the portfolio PNG), `swift-evolution` (SE-0293, SE-0309; 2020–21).
 - **education/**: `vassar` (BA, CS & Mathematics, expected May 2027).
 - **hobbies/**: `linguistics`, `public-transit`, `mt-olympus`, `running` as stubs with placeholder blurbs.
