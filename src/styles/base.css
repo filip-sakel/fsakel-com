@@ -110,7 +110,8 @@
    view-transition-name, so it stays put while the page changes under it.
    - default: horizontal slide; src/scripts/vt.js (optional) adds the `back`
      type to reverse it.
-   - reduced motion: no movement, the pages cross-fade through a blur. */
+   - reduced motion, or JS disabled: no movement, the pages cross-fade
+     through a blur. (Without vt.js the slide can't reverse on back.) */
 @layer motion {
   @view-transition {
     navigation: auto;
@@ -166,7 +167,7 @@
     }
   }
 
-  @media (prefers-reduced-motion: reduce) {
+  @media (prefers-reduced-motion: reduce), (scripting: none) {
     /* Slower and symmetric so the blur builds and clears gradually. */
     ::view-transition-group(root) {
       animation-duration: 0.4s;
