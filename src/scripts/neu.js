@@ -4,7 +4,8 @@
 // without tilting. Touch input is ignored, so phones get the even sink.
 
 // The mouse position within the button as --px/--py, −1 … 1 (neu.css
-// clamps it, for the hover zone just past the edge).
+// clamps it, for the hover zone just past the edge). Reading the rect on
+// every move forces no extra work, so it isn't cached (docs/performance.md).
 addEventListener('pointermove', (e) => {
   const el = e.pointerType === 'mouse' && e.target.closest?.('.neu');
   if (!el) return;

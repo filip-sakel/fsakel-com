@@ -131,6 +131,20 @@ it stops applying.
   before the first render, or back-navigation slides the wrong way. The CSP
   allows it by hash; after editing it, `pnpm check` fails and prints the new
   hash for `script-src` in `deploy/Caddyfile`.
+- **Register every value `.neu` derives with `@property`**
+  (`src/styles/neu.css`), even though nothing animates them. Chrome computes
+  a registered value once, but keeps an unregistered one as text that every
+  `var()` using it parses again. Registering the ~25 derived values cut the
+  nav buttons' style recalc by 15–20% (2026-11-03, headless Chromium), with
+  identical computed styles. A new value added to `.neu` needs its own
+  `@property` line, or it's on the slow path again. They're
+  `inherits: false`, which holds only while nothing outside `.neu` reads
+  them.
+- **Don't cache the button rect in `src/scripts/neu.js`.** Chrome sends at
+  most one `pointermove` per frame, after style is already up to date, so
+  `getBoundingClientRect()` forces no recalc. Tested 2026-11-03: caching it
+  left the count unchanged (512 recalcs for 488 moves either way), so it's
+  not worth the extra state.
 - **No inline styles.** The CSP is `style-src 'self'`. Per-element styles
   (e.g. a per-photo color preview) would need hashes for each value.
 

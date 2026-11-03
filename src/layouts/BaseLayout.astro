@@ -9,7 +9,7 @@ import hankenLatin from '@fontsource-variable/hanken-grotesk/files/hanken-grotes
 
 import { Icon } from 'astro-icon/components';
 import Nav from '../components/Nav.astro';
-import { nav, site, social } from '../data/site';
+import { site, social } from '../data/site';
 
 interface Props {
   title?: string | undefined;
@@ -43,8 +43,6 @@ const inlineJs = [vtSource, neuSource].map((s) => s.replace(/^\s*\/\/.*\n/gm, ''
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
-    <!-- Optional enhancement: page-slide direction follows the nav order. -->
-    <meta name="nav-order" content={nav.map((n) => n.href).join(' ')} />
     <script is:inline set:html={inlineJs} />
     <slot name="head" />
   </head>

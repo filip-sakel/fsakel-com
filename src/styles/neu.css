@@ -24,6 +24,37 @@
 @property --px { syntax: '<number>'; inherits: true; initial-value: 0; }
 @property --py { syntax: '<number>'; inherits: true; initial-value: 0; }
 
+/* The knobs and derived values are registered too, though nothing animates
+   them: Chrome computes a registered value once, but keeps an unregistered
+   one as text that every var() using it parses again. That cuts a button's
+   style recalc by ~15–20% (docs/performance.md). Give any new value in .neu
+   a line here. inherits: false, because only .neu itself reads them. */
+@property --raised-depth { syntax: '<number>'; inherits: false; initial-value: 0; }
+@property --sunk-depth { syntax: '<number>'; inherits: false; initial-value: 0; }
+@property --sink { syntax: '<number>'; inherits: false; initial-value: 0; }
+@property --tilt { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+@property --tilt-gain { syntax: '<number>'; inherits: false; initial-value: 0; }
+@property --aspect { syntax: '<number>'; inherits: false; initial-value: 0; }
+@property --cx { syntax: '<number>'; inherits: false; initial-value: 0; }
+@property --cy { syntax: '<number>'; inherits: false; initial-value: 0; }
+@property --a { syntax: '<number>'; inherits: false; initial-value: 0; }
+@property --e { syntax: '<number>'; inherits: false; initial-value: 0; }
+@property --pd { syntax: '<number>'; inherits: false; initial-value: 0; }
+@property --pf { syntax: '<number>'; inherits: false; initial-value: 0; }
+@property --dark-x { syntax: '<number>'; inherits: false; initial-value: 0; }
+@property --dark-y { syntax: '<number>'; inherits: false; initial-value: 0; }
+@property --light-x { syntax: '<number>'; inherits: false; initial-value: 0; }
+@property --light-y { syntax: '<number>'; inherits: false; initial-value: 0; }
+@property --blur { syntax: '<number>'; inherits: false; initial-value: 0; }
+@property --ox { syntax: '<length>'; inherits: false; initial-value: 0px; }
+@property --rim { syntax: '<number>'; inherits: false; initial-value: 0; }
+@property --wd { syntax: '<number>'; inherits: false; initial-value: 0; }
+@property --w-sx { syntax: '<number>'; inherits: false; initial-value: 0; }
+@property --w-sy { syntax: '<number>'; inherits: false; initial-value: 0; }
+@property --w-hx { syntax: '<number>'; inherits: false; initial-value: 0; }
+@property --w-hy { syntax: '<number>'; inherits: false; initial-value: 0; }
+@property --w-blur { syntax: '<number>'; inherits: false; initial-value: 0; }
+
 @layer components {
   .neu {
     /* Knobs */

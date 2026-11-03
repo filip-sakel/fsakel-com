@@ -10,16 +10,17 @@
 addEventListener('pagereveal', (e) => {
   const from = window.navigation?.activation?.from?.url;
   if (!e.viewTransition || !from) return;
-  const order = (document.querySelector('meta[name="nav-order"]')?.content ?? '').split(' ');
+  // The nav's own links give the order (src/data/site.ts).
+  const links = document.querySelectorAll('.site-nav a');
   const item = (url) => {
     const path = new URL(url).pathname;
-    return order.findLastIndex((h) => (h === '/' ? path === '/' : path.startsWith(h)));
+    return [...links].findLastIndex((a) => (a.pathname === '/' ? path === '/' : path.startsWith(a.pathname)));
   };
   // Pages below a section (write-ups) rank just after it.
   const rank = (url) => Math.max(item(url), 0) + (new URL(url).pathname.split('/').filter(Boolean).length > 1 ? 0.5 : 0);
   if (rank(from) > rank(location.href)) e.viewTransition.types.add('back');
-  const was = document.querySelectorAll('.site-nav a')[item(from)];
-  if (was && !was.hasAttribute('aria-current')) was.dataset.was = '';
+  const was = links[item(from)];
+  if (was && !was.hasAttribute('aria-current')) was.setAttribute('data-was', '');
 });
 
 // Hold the pressed nav item down until the next page shows. Without this,
@@ -32,7 +33,7 @@ addEventListener('click', (e) => {
   if (a.pathname === location.pathname) return e.preventDefault();
   if (a.hasAttribute('aria-current')) return;
   held = a;
-  a.dataset.held = '';
+  a.setAttribute('data-held', '');
 });
 // Coming back to this page from the back/forward cache: let it go.
 addEventListener('pageshow', (e) => e.persisted && held?.removeAttribute('data-held'));
