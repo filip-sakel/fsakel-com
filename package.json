@@ -6,7 +6,7 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "serve": "astro build && ${CONTAINER:-podman} run --rm --name fsakel-serve -p ${HOST:-127.0.0.1}:3000:3000 -v ./dist:/srv:ro,Z -v ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro,Z docker.io/library/caddy:2-alpine",
+    "serve": "astro build && ${CONTAINER:-podman} run --rm --name fsakel-com-serve -p ${HOST:-127.0.0.1}:${PORT:-3000}:3000 -v ./dist:/srv:ro,Z -v ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro,Z docker.io/library/caddy:2-alpine",
     "perf:budget": "node scripts/perf-budget.mjs",
     "perf:lighthouse": "node scripts/lighthouse.mjs",
     "check": "astro check && astro build && node scripts/perf-budget.mjs"
