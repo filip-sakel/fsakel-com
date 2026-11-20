@@ -1,6 +1,6 @@
 ---
 title: Running
-blurb: Favorite routes, from Oakland to Thessaloniki.
+blurb: From California to Thessaloniki, my favorite routes
 icon: material-symbols:directions-run-rounded
 order: 1
 photos:

@@ -1,6 +1,6 @@
 ---
 title: Biking
-blurb: Rides around the Bay Area and New York.
+blurb: Beautiful bike trails in the Bay Area and NYC
 icon: material-symbols:directions-bike-rounded
 order: 3
 photos:

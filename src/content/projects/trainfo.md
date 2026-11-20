@@ -17,5 +17,5 @@ details:
   - Wrote 220+ automated tests with pytest, Vitest, and Playwright
 links:
   - { label: trainfo.app, href: https://trainfo.app }
-skills: [TypeScript, SvelteKit, Python, Kotlin, Jetpack Compose, Docker, AWS, GitHub Actions, pytest, Vitest, Playwright, SQL]
+skills: [TypeScript, SvelteKit, REST APIs, Python, Kotlin, Jetpack Compose, Docker, AWS, GitHub Actions, pytest, Vitest, Playwright, SQL]
 ---

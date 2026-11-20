@@ -1,6 +1,6 @@
 ---
 title: Swimming
-blurb: An occasional swim from the beach house.
+blurb: That time I swam in Paris during a major heatwave
 icon: material-symbols:pool-rounded
 order: 2
 photos:
