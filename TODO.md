@@ -14,3 +14,4 @@ Plans for future iterations of the app.
 9. Conform to neumorphic design
 10. Have skills in Projects section say explicitly how we used that skill in said project (and then maybe link to skills section)
 11. Look into optimizing page transition (perhaps in vain)
+12. Opening a project write-up (e.g. /projects/gsoc-swift/) should use a zoom-in or other non-slide transition: the current horizontal slide conflicts with the visual metaphor of sliding between top-level sections/pages
